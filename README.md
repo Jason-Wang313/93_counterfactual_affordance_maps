@@ -1,18 +1,29 @@
 # 93 Counterfactual Affordance Maps
 
-Submission-hardening version: v3
+Submission-hardening version: v4
 
 Terminal decision: KILL_ARCHIVE for ICLR main conference.
 
-The repository is retained as an archive of the generated idea, hostile review, synthetic stress-test scaffold, and reproducibility files. It is not an ICLR main-conference-ready robotics paper because it lacks real-robot/high-fidelity evidence and implemented learned baselines.
+This repository now contains a deterministic manipulation-affordance evidence audit for the claim that robots should map affordances under alternate grasps, poses, supports, and semantic roles. The rebuilt benchmark includes four tasks, five shifts, seven seeds, nine affordance methods, seven ablations, and a stress sweep.
 
-## Reproduce Synthetic Scaffold
+## Key Result
+
+On combined counterfactual stress:
+
+- Proposed counterfactual map: task success 0.347, AP 0.217, counterfactual recall 0.0089, regret 0.034.
+- Interactive affordance probe: task success 0.362, AP 0.227, counterfactual recall 0.0077, regret 0.024.
+- Graph-conv affordance: task success 0.323, AP 0.184, counterfactual recall 0.0034.
+- Paired task-success difference vs strongest non-oracle baseline: -0.0157 +/- 0.0202.
+
+The proposed method improves over static observed/graph/VLM affordance baselines, but it does not beat active probing decisively and lacks robot hardware or accepted high-fidelity validation.
+
+## Reproduce Evidence
 
 ```powershell
 python src\run_experiment.py
 ```
 
-## Rebuild Archive PDF
+## Rebuild PDF
 
 ```powershell
 cd paper
@@ -21,3 +32,5 @@ pdflatex -interaction=nonstopmode -halt-on-error main.tex
 ```
 
 Canonical local PDF: `C:/Users/wangz/Downloads/93.pdf`
+
+No PDF should be copied to the visible Desktop.

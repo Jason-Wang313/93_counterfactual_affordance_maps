@@ -1,16 +1,46 @@
-Submission-hardening experiment for paper 93 counterfactual_affordance_maps
-Seven seeds, 600 episodes per seed, strong baselines, ablations, stress sweep, and negative cases.
-observed_only_behavior_clone hidden_mode_shift mean_success=0.4129 ci95=0.0198 tail=0.5871
-observed_only_behavior_clone combined_stress mean_success=0.3400 ci95=0.0193 tail=0.6600
-data_augmentation_wam hidden_mode_shift mean_success=0.4857 ci95=0.0100 tail=0.5143
-data_augmentation_wam combined_stress mean_success=0.4336 ci95=0.0171 tail=0.5664
-scalar_uncertainty_planner hidden_mode_shift mean_success=0.5531 ci95=0.0217 tail=0.4469
-scalar_uncertainty_planner combined_stress mean_success=0.5052 ci95=0.0095 tail=0.4948
-ensemble_disagreement_planner hidden_mode_shift mean_success=0.5910 ci95=0.0193 tail=0.4090
-ensemble_disagreement_planner combined_stress mean_success=0.5364 ci95=0.0081 tail=0.4636
-conformal_risk_filter hidden_mode_shift mean_success=0.6069 ci95=0.0175 tail=0.3931
-conformal_risk_filter combined_stress mean_success=0.5745 ci95=0.0198 tail=0.4255
-proposed_branch_mechanism hidden_mode_shift mean_success=0.7036 ci95=0.0175 tail=0.2964
-proposed_branch_mechanism combined_stress mean_success=0.6660 ci95=0.0159 tail=0.3340
-oracle_branch_upper_bound hidden_mode_shift mean_success=0.7700 ci95=0.0196 tail=0.2300
-oracle_branch_upper_bound combined_stress mean_success=0.7493 ci95=0.0136 tail=0.2507
+Paper 93 counterfactual_affordance_maps v4 rebuild
+Terminal recommendation: KILL_ARCHIVE
+Reason: deterministic manipulation-affordance benchmark added; no robot hardware or accepted high-fidelity manipulation benchmark validation is available.
+Main rollout rows: 105840
+Ablation rollout rows: 16464
+Stress rollout rows: 52416
+Seeds: [0, 1, 2, 3, 4, 5, 6]
+
+Combined counterfactual stress:
+observed_affordance_map success=0.26020 ci95=0.01613 ap=0.14352 cf_recall=0.00213 invalid=0.44728 damage=0.14908 regret=0.11107 cost=0.00000
+multi_affordance_grasping success=0.28614 ci95=0.02256 ap=0.16286 cf_recall=0.00298 invalid=0.38818 damage=0.13691 regret=0.08716 cost=0.00000
+graph_conv_affordance success=0.32313 ci95=0.02286 ap=0.18380 cf_recall=0.00340 invalid=0.36182 damage=0.12439 regret=0.06790 cost=0.00000
+gaussian_grasp_map success=0.28699 ci95=0.01977 ap=0.16631 cf_recall=0.00298 invalid=0.40434 damage=0.13782 regret=0.08370 cost=0.00000
+vlm_spatial_affordance success=0.30527 ci95=0.01728 ap=0.17818 cf_recall=0.00383 invalid=0.34226 damage=0.12877 regret=0.07576 cost=0.00000
+interactive_affordance_probe success=0.36224 ci95=0.02063 ap=0.22665 cf_recall=0.00765 invalid=0.24830 damage=0.09890 regret=0.02445 cost=0.18000
+ensemble_uncertainty_affordance success=0.34056 ci95=0.02547 ap=0.20365 cf_recall=0.00808 invalid=0.30655 damage=0.11605 regret=0.04651 cost=0.04000
+proposed_counterfactual_affordance_map success=0.34651 ci95=0.02045 ap=0.21670 cf_recall=0.00893 invalid=0.28529 damage=0.10557 regret=0.03385 cost=0.02000
+oracle_counterfactual_map success=0.37840 ci95=0.02208 ap=0.24291 cf_recall=0.01446 invalid=0.25000 damage=0.09217 regret=0.01199 cost=0.00000
+paired success diff vs best baseline interactive_affordance_probe=-0.01573 ci95=0.02023
+paired cf-recall diff=0.00128 ci95=0.00367; paired regret reduction=-0.00940 ci95=0.00215
+
+Ablations:
+full_counterfactual_affordance success=0.37032 cf_recall=0.01105 invalid=0.27721 regret=0.03104 cost=0.02000
+minus_pose_counterfactuals success=0.34056 cf_recall=0.00808 invalid=0.27083 regret=0.03926 cost=0.02000
+minus_semantic_counterfactuals success=0.33376 cf_recall=0.00765 invalid=0.30782 regret=0.04017 cost=0.02000
+minus_support_counterfactuals success=0.33376 cf_recall=0.00638 invalid=0.30697 regret=0.04649 cost=0.02000
+minus_uncertainty_calibration success=0.33376 cf_recall=0.01063 invalid=0.30527 regret=0.04246 cost=0.02000
+observed_only_counterfactual_head success=0.27168 cf_recall=0.00340 invalid=0.40604 regret=0.09552 cost=0.00000
+support_only_counterfactual_head success=0.34141 cf_recall=0.00553 invalid=0.28529 regret=0.05004 cost=0.02000
+
+Combined stress level 1.0:
+ensemble_uncertainty_affordance success=0.31319 cf_recall=0.00687 invalid=0.30563 regret=0.04754
+graph_conv_affordance success=0.30082 cf_recall=0.00275 invalid=0.35440 regret=0.06646
+interactive_affordance_probe success=0.33654 cf_recall=0.00962 invalid=0.25687 regret=0.02601
+oracle_counterfactual_map success=0.37500 cf_recall=0.01236 invalid=0.25137 regret=0.01138
+proposed_counterfactual_affordance_map success=0.34341 cf_recall=0.00824 invalid=0.29121 regret=0.03292
+vlm_spatial_affordance success=0.31181 cf_recall=0.00343 invalid=0.34135 regret=0.07156
+
+Gate checks:
+success_gate=False
+recall_gate=False
+invalid_or_regret_gate=False
+cost_ok=True
+ablation_gate=True best_ablation=support_only_counterfactual_head
+stress_gate=True stress_best_baseline=interactive_affordance_probe
+oracle_success=0.37840
