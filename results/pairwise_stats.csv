@@ -1,0 +1,2 @@
+split,proposed,best_non_oracle_baseline,paired_success_diff,paired_success_ci95,paired_cf_recall_diff,paired_cf_recall_ci95,paired_invalid_reduction,paired_invalid_ci95,paired_regret_reduction,paired_regret_ci95,paired_extra_cost,paired_extra_cost_ci95,success_gate,recall_gate,invalid_or_regret_gate,cost_gate,ablation_gate,stress_gate,terminal
+combined_counterfactual_stress,proposed_counterfactual_affordance_map,interactive_affordance_probe,-0.01573,0.02023,0.00128,0.00367,-0.03699,0.02083,-0.00940,0.00215,-0.16000,0.00000,False,False,False,True,True,True,KILL_ARCHIVE

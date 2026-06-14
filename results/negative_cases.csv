@@ -1,4 +1,4 @@
-case,expected_behavior,observed_success,lesson
-unmodeled_hardware_damage,planner abstains or requests human inspection,0.18,branch semantics cannot repair missing actuation
-semantic_goal_ambiguity,diagnostic physical probes do not solve language ambiguity,0.31,needs a separate instruction-grounding loop
-adversarial_sensor_dropout,tail-risk objective becomes conservative,0.39,sensor-health modeling is out of scope
+case,observed_failure,implication
+active_probe_matches_action_choice,interactive probing reaches similar or better task success despite weaker counterfactual map recall,closed-loop value does not require the full proposed representation in this benchmark
+semantic_occlusion_shift,VLM-style spatial affordances recover semantic matches that the counterfactual map over-penalizes,counterfactual geometry is not enough for language-conditioned affordance tasks
+support_only_ablation,support-only counterfactuals can match much of the full method on stacking-style tasks,the broad pose/support/semantic counterfactual mechanism is not cleanly isolated
