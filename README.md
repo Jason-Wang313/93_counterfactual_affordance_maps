@@ -1,10 +1,12 @@
 # 93 Counterfactual Affordance Maps
 
-Submission-hardening version: v4
+Submission-hardening version: v4.1 rerun audit
 
 Terminal decision: KILL_ARCHIVE for ICLR main conference.
 
 This repository now contains a deterministic manipulation-affordance evidence audit for the claim that robots should map affordances under alternate grasps, poses, supports, and semantic roles. The rebuilt benchmark includes four tasks, five shifts, seven seeds, nine affordance methods, seven ablations, and a stress sweep.
+
+The 2026-06-15 continuation rerun reproduced the same terminal decision: the proposed counterfactual map is useful locally, but active probing remains the stronger closed-loop baseline.
 
 ## Key Result
 
