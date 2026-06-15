@@ -192,3 +192,24 @@ Attack: No meaningful recoverable ICLR-main issue remains after archiving.
 Verdict: Terminal condition reached.
 
 Action: Mark KILL_ARCHIVE and stop.
+
+## v4 Rerun Gate Round 28
+Attack: The rerun might show a decisive closed-loop gain from counterfactual affordance maps.
+
+Verdict: Failed. The proposed method reaches task success `0.34651`, while `interactive_affordance_probe` reaches `0.36224`; paired success difference is `-0.01573 +/- 0.02023`.
+
+Action: Keep KILL_ARCHIVE.
+
+## v4 Rerun Gate Round 29
+Attack: Counterfactual recall might compensate for the active-probing success loss.
+
+Verdict: Failed for ICLR main. The paired counterfactual-recall difference is only `0.00128 +/- 0.00367`, and paired regret reduction is negative at `-0.00940 +/- 0.00215`.
+
+Action: Preserve the recall signal as a local diagnostic, not as submission readiness.
+
+## v4 Rerun Gate Round 30
+Attack: Ablations might prove the broad pose/support/semantic counterfactual mechanism cleanly.
+
+Verdict: Mixed and insufficient. The full ablation is strongest overall, but `support_only_counterfactual_head` captures a meaningful portion of success and invalid-action behavior.
+
+Action: Do not claim ICLR-main readiness without real or accepted high-fidelity manipulation evidence.

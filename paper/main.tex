@@ -24,7 +24,7 @@ The rebuild therefore uses a hostile gate: a counterfactual affordance map must 
 \section{Benchmark}
 Each episode samples a manipulation scene with hidden support relations, occlusion, contact stability, semantic task constraints, and twelve candidate actions. The simulator evaluates both map prediction quality and the outcome of choosing an action from the predicted map.
 
-The tasks are cluttered pick-and-place, tool regrasp for use, support-sensitive stacking, and occluded container opening. The shifts are nominal affordance, pose shift, support shift, occlusion/semantic shift, and combined counterfactual stress. The main run contains 105,840 episode-level rollouts; ablations contain 16,464 rollouts; stress sweeps contain 52,416 rollouts. Results are regenerated with:
+The tasks are cluttered pick-and-place, tool regrasp for use, support-sensitive stacking, and occluded container opening. The shifts are nominal affordance, pose shift, support shift, occlusion/semantic shift, and combined counterfactual stress. The main run contains 105,840 episode-level rollouts; ablations contain 16,464 rollouts; stress sweeps contain 52,416 rollouts. A 2026-06-15 continuation rerun reproduced the same terminal gate outcome. Results are regenerated with:
 \begin{verbatim}
 python src\run_experiment.py
 \end{verbatim}
@@ -117,6 +117,6 @@ At maximum stress, the proposed method reaches 0.343 task success. Interactive p
 \end{figure}
 
 \section{Decision}
-The rebuilt evidence supports a modest conclusion: counterfactual affordance maps can improve over static affordance baselines and have internally coherent ablations. But the central ICLR-main claim fails. A simple interactive probing baseline achieves better combined-stress task success and regret; counterfactual-recall gains are too small; and the evidence is local/simulated. The terminal recommendation is \textbf{KILL/ARCHIVE}. Revival would require robot or high-fidelity manipulation evidence showing decisive gains over active probing, graph/VLM affordance models, and uncertainty ensembles.
+The rebuilt and rerun evidence supports a modest conclusion: counterfactual affordance maps can improve over static affordance baselines and have internally coherent ablations. But the central ICLR-main claim fails. A simple interactive probing baseline achieves better combined-stress task success and regret; counterfactual-recall gains are too small; and the evidence is local/simulated. The terminal recommendation is \textbf{KILL/ARCHIVE}. Revival would require robot or high-fidelity manipulation evidence showing decisive gains over active probing, graph/VLM affordance models, and uncertainty ensembles.
 
 \end{document}

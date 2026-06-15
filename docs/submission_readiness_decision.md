@@ -4,7 +4,7 @@ Decision: KILL_ARCHIVE
 
 ICLR main-conference readiness: NO.
 
-Paper 93 was rebuilt as a v4 deterministic manipulation-affordance evidence audit. The evidence is not enough for an ICLR main submission.
+Paper 93 was rebuilt as a v4 deterministic manipulation-affordance evidence audit and rerun on 2026-06-15 as a v4.1 continuation audit. The evidence is not enough for an ICLR main submission.
 
 Reasons:
 
