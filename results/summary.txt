@@ -1,46 +1,152 @@
-Paper 93 counterfactual_affordance_maps v4 rebuild
+Paper 93 counterfactual_affordance_maps v5 expanded audit
 Terminal recommendation: KILL_ARCHIVE
-Reason: deterministic manipulation-affordance benchmark added; no robot hardware or accepted high-fidelity manipulation benchmark validation is available.
-Main rollout rows: 105840
-Ablation rollout rows: 16464
-Stress rollout rows: 52416
-Seeds: [0, 1, 2, 3, 4, 5, 6]
+ICLR main ready: no
+Reason: expanded CPU-only counterfactual-affordance audit tests whether maps beat active probing and robust MPC closed-loop baselines, but deployed success/utility and fixed-risk/scope gates remain insufficient.
+Main rollout rows: 215040
+Dataset summary rows: 15360
+Main seed-metric rows: 1120
+Main metric rows: 1568
+Main pairwise rows: 1344
+Hard aggregate seed rows: 140
+Hard aggregate metric rows: 196
+Hard aggregate pairwise rows: 168
+Ablation rollout rows: 76800
+Ablation seed rows: 100
+Ablation metric rows: 140
+Stress raw rows: 604800
+Stress seed rows: 840
+Stress metric rows: 1176
+Fixed-risk raw rows: 69120
+Fixed-risk seed rows: 480
+Fixed-risk metric rows: 288
+Fixed-risk pairwise rows: 240
+Negative cases: 24
 
-Combined counterfactual stress:
-observed_affordance_map success=0.26020 ci95=0.01613 ap=0.14352 cf_recall=0.00213 invalid=0.44728 damage=0.14908 regret=0.11107 cost=0.00000
-multi_affordance_grasping success=0.28614 ci95=0.02256 ap=0.16286 cf_recall=0.00298 invalid=0.38818 damage=0.13691 regret=0.08716 cost=0.00000
-graph_conv_affordance success=0.32313 ci95=0.02286 ap=0.18380 cf_recall=0.00340 invalid=0.36182 damage=0.12439 regret=0.06790 cost=0.00000
-gaussian_grasp_map success=0.28699 ci95=0.01977 ap=0.16631 cf_recall=0.00298 invalid=0.40434 damage=0.13782 regret=0.08370 cost=0.00000
-vlm_spatial_affordance success=0.30527 ci95=0.01728 ap=0.17818 cf_recall=0.00383 invalid=0.34226 damage=0.12877 regret=0.07576 cost=0.00000
-interactive_affordance_probe success=0.36224 ci95=0.02063 ap=0.22665 cf_recall=0.00765 invalid=0.24830 damage=0.09890 regret=0.02445 cost=0.18000
-ensemble_uncertainty_affordance success=0.34056 ci95=0.02547 ap=0.20365 cf_recall=0.00808 invalid=0.30655 damage=0.11605 regret=0.04651 cost=0.04000
-proposed_counterfactual_affordance_map success=0.34651 ci95=0.02045 ap=0.21670 cf_recall=0.00893 invalid=0.28529 damage=0.10557 regret=0.03385 cost=0.02000
-oracle_counterfactual_map success=0.37840 ci95=0.02208 ap=0.24291 cf_recall=0.01446 invalid=0.25000 damage=0.09217 regret=0.01199 cost=0.00000
-paired success diff vs best baseline interactive_affordance_probe=-0.01573 ci95=0.02023
-paired cf-recall diff=0.00128 ci95=0.00367; paired regret reduction=-0.00940 ci95=0.00215
+Frozen hard-aggregate gate:
+best_success_reference=causal_counterfactual_affordance_planner_v5
+success_challenger_reference=interactive_affordance_probe
+safest_reference=interactive_affordance_probe
+best_counterfactual_recall_reference=causal_counterfactual_affordance_planner_v5
+best_calibration_reference=observed_affordance_map
+best_utility_reference=interactive_affordance_probe
+utility_ci_reference=interactive_affordance_probe
+stress_dominated_by=interactive_affordance_probe
+proposal_success=0.33646
+best_success=0.33646
+proposal_invalid_action=0.39323
+safest_invalid_action=0.20521
+proposal_damage_rate=0.19531
+proposal_counterfactual_recall=1.00000
+best_counterfactual_recall=1.00000
+proposal_map_ece=0.38475
+best_map_ece=0.13170
+proposal_utility=-0.43149
+best_utility=-0.15992
+paired_success_lower95=0.01474
+paired_active_success_lower95=0.01474
+paired_active_regret_upper95=0.07565
+paired_recall_lower95=0.13296
+paired_utility_lower95=-0.29889
+success_gate=True
+active_probe_gate=False
+recall_gate=True
+safety_gate=False
+calibration_gate=False
+utility_gate=False
+ablation_gate=True
+mechanism_best_ablation=full_causal_counterfactual_affordance_v5
+stress_gate=False
+fixed_risk_gate=False
+scope_gate=False
+low_signal_counterfactual_shift: v5_coverage=0.00000
+combined_counterfactual_stress: v5_coverage=0.00000
 
-Ablations:
-full_counterfactual_affordance success=0.37032 cf_recall=0.01105 invalid=0.27721 regret=0.03104 cost=0.02000
-minus_pose_counterfactuals success=0.34056 cf_recall=0.00808 invalid=0.27083 regret=0.03926 cost=0.02000
-minus_semantic_counterfactuals success=0.33376 cf_recall=0.00765 invalid=0.30782 regret=0.04017 cost=0.02000
-minus_support_counterfactuals success=0.33376 cf_recall=0.00638 invalid=0.30697 regret=0.04649 cost=0.02000
-minus_uncertainty_calibration success=0.33376 cf_recall=0.01063 invalid=0.30527 regret=0.04246 cost=0.02000
-observed_only_counterfactual_head success=0.27168 cf_recall=0.00340 invalid=0.40604 regret=0.09552 cost=0.00000
-support_only_counterfactual_head success=0.34141 cf_recall=0.00553 invalid=0.28529 regret=0.05004 cost=0.02000
+Hard aggregate metrics:
+observed_affordance_map success=0.08672 ap=0.89091 cf_recall=0.00000 invalid=0.56276 damage=0.30938 regret=0.52220 ece=0.13170 utility=-1.06448 mechanism=-0.12926
+multi_affordance_grasping success=0.12760 ap=0.90704 cf_recall=0.00000 invalid=0.54219 damage=0.29036 regret=0.49687 ece=0.34614 utility=-0.96815 mechanism=-0.07337
+graph_conv_affordance success=0.16172 ap=0.89817 cf_recall=0.00000 invalid=0.51276 damage=0.26979 regret=0.47271 ece=0.22995 utility=-0.87025 mechanism=-0.00748
+gaussian_grasp_map success=0.12969 ap=0.90180 cf_recall=0.00000 invalid=0.52161 damage=0.27578 regret=0.48228 ece=0.19427 utility=-0.92400 mechanism=-0.06319
+vlm_spatial_affordance success=0.16354 ap=0.87672 cf_recall=0.00000 invalid=0.51719 damage=0.27760 regret=0.47038 ece=0.22488 utility=-0.87765 mechanism=-0.00161
+diffusion_affordance_sampler success=0.21276 ap=0.91456 cf_recall=0.00032 invalid=0.43880 damage=0.21745 regret=0.41202 ece=0.39679 utility=-0.66570 mechanism=0.07563
+foundation_vlm_affordance success=0.19427 ap=0.86776 cf_recall=0.00000 invalid=0.48594 damage=0.25130 regret=0.44519 ece=0.33739 utility=-0.77585 mechanism=0.03382
+ensemble_uncertainty_affordance success=0.20885 ap=0.93198 cf_recall=0.01164 invalid=0.41458 damage=0.20443 regret=0.40697 ece=0.39841 utility=-0.63376 mechanism=0.12026
+interactive_affordance_probe success=0.29557 ap=0.91619 cf_recall=0.85359 invalid=0.20521 damage=0.04427 regret=0.27682 ece=0.30780 utility=-0.15992 mechanism=0.22515
+active_view_affordance_probe success=0.28047 ap=0.93407 cf_recall=0.72234 invalid=0.27708 damage=0.10130 regret=0.30987 ece=0.31014 utility=-0.30291 mechanism=0.20393
+robust_mpc_affordance_planner success=0.25833 ap=0.90419 cf_recall=0.00000 invalid=0.23594 damage=0.05859 regret=0.30822 ece=0.30762 utility=-0.22369 mechanism=0.14854
+counterfactual_affordance_map_v4 success=0.25104 ap=0.92983 cf_recall=0.70928 invalid=0.44479 damage=0.23828 regret=0.40230 ece=0.32345 utility=-0.64254 mechanism=0.18915
+causal_counterfactual_affordance_planner_v5 success=0.33646 ap=0.94176 cf_recall=1.00000 invalid=0.39323 damage=0.19531 regret=0.35070 ece=0.38475 utility=-0.43149 mechanism=0.34130
+oracle_counterfactual_map success=0.46328 ap=0.95959 cf_recall=1.00000 invalid=0.18698 damage=0.05234 regret=0.21186 ece=0.49944 utility=0.12006 mechanism=0.54936
 
-Combined stress level 1.0:
-ensemble_uncertainty_affordance success=0.31319 cf_recall=0.00687 invalid=0.30563 regret=0.04754
-graph_conv_affordance success=0.30082 cf_recall=0.00275 invalid=0.35440 regret=0.06646
-interactive_affordance_probe success=0.33654 cf_recall=0.00962 invalid=0.25687 regret=0.02601
-oracle_counterfactual_map success=0.37500 cf_recall=0.01236 invalid=0.25137 regret=0.01138
-proposed_counterfactual_affordance_map success=0.34341 cf_recall=0.00824 invalid=0.29121 regret=0.03292
-vlm_spatial_affordance success=0.31181 cf_recall=0.00343 invalid=0.34135 regret=0.07156
+Key paired hard-aggregate differences:
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe task_success: mean=0.04089 ci95=0.02615 lower95=0.01474 upper95=0.06703
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe counterfactual_recall: mean=0.14641 ci95=0.01345 lower95=0.13296 upper95=0.15986
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe invalid_action: mean=0.18802 ci95=0.01663 lower95=0.17139 upper95=0.20465
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe damage_rate: mean=0.15104 ci95=0.01035 lower95=0.14069 upper95=0.16139
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe planning_regret: mean=0.07388 ci95=0.00177 lower95=0.07212 upper95=0.07565
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe robust_utility: mean=-0.27156 ci95=0.02732 lower95=-0.29889 upper95=-0.24424
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe mechanism_utility: mean=0.11615 ci95=0.00086 lower95=0.11529 upper95=0.11701
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe task_success: mean=0.04089 ci95=0.02615 lower95=0.01474 upper95=0.06703
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe counterfactual_recall: mean=0.14641 ci95=0.01345 lower95=0.13296 upper95=0.15986
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe invalid_action: mean=0.18802 ci95=0.01663 lower95=0.17139 upper95=0.20465
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe damage_rate: mean=0.15104 ci95=0.01035 lower95=0.14069 upper95=0.16139
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe planning_regret: mean=0.07388 ci95=0.00177 lower95=0.07212 upper95=0.07565
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe robust_utility: mean=-0.27156 ci95=0.02732 lower95=-0.29889 upper95=-0.24424
+causal_counterfactual_affordance_planner_v5_minus_interactive_affordance_probe mechanism_utility: mean=0.11615 ci95=0.00086 lower95=0.11529 upper95=0.11701
+causal_counterfactual_affordance_planner_v5_minus_robust_mpc_affordance_planner task_success: mean=0.07812 ci95=0.01372 lower95=0.06441 upper95=0.09184
+causal_counterfactual_affordance_planner_v5_minus_robust_mpc_affordance_planner counterfactual_recall: mean=1.00000 ci95=0.00000 lower95=1.00000 upper95=1.00000
+causal_counterfactual_affordance_planner_v5_minus_robust_mpc_affordance_planner invalid_action: mean=0.15729 ci95=0.01424 lower95=0.14305 upper95=0.17153
+causal_counterfactual_affordance_planner_v5_minus_robust_mpc_affordance_planner damage_rate: mean=0.13672 ci95=0.00831 lower95=0.12841 upper95=0.14503
+causal_counterfactual_affordance_planner_v5_minus_robust_mpc_affordance_planner planning_regret: mean=0.04248 ci95=0.00172 lower95=0.04076 upper95=0.04420
+causal_counterfactual_affordance_planner_v5_minus_robust_mpc_affordance_planner robust_utility: mean=-0.20780 ci95=0.02255 lower95=-0.23035 upper95=-0.18525
+causal_counterfactual_affordance_planner_v5_minus_robust_mpc_affordance_planner mechanism_utility: mean=0.19276 ci95=0.00088 lower95=0.19189 upper95=0.19364
+causal_counterfactual_affordance_planner_v5_minus_counterfactual_affordance_map_v4 task_success: mean=0.08542 ci95=0.02090 lower95=0.06451 upper95=0.10632
+causal_counterfactual_affordance_planner_v5_minus_counterfactual_affordance_map_v4 counterfactual_recall: mean=0.29072 ci95=0.01642 lower95=0.27430 upper95=0.30715
+causal_counterfactual_affordance_planner_v5_minus_counterfactual_affordance_map_v4 invalid_action: mean=-0.05156 ci95=0.01903 lower95=-0.07060 upper95=-0.03253
+causal_counterfactual_affordance_planner_v5_minus_counterfactual_affordance_map_v4 damage_rate: mean=-0.04297 ci95=0.01666 lower95=-0.05963 upper95=-0.02631
+causal_counterfactual_affordance_planner_v5_minus_counterfactual_affordance_map_v4 planning_regret: mean=-0.05160 ci95=0.00183 lower95=-0.05343 upper95=-0.04977
+causal_counterfactual_affordance_planner_v5_minus_counterfactual_affordance_map_v4 robust_utility: mean=0.21106 ci95=0.03280 lower95=0.17826 upper95=0.24386
+causal_counterfactual_affordance_planner_v5_minus_counterfactual_affordance_map_v4 mechanism_utility: mean=0.15215 ci95=0.00092 lower95=0.15123 upper95=0.15307
 
-Gate checks:
-success_gate=False
-recall_gate=False
-invalid_or_regret_gate=False
-cost_ok=True
-ablation_gate=True best_ablation=support_only_counterfactual_head
-stress_gate=True stress_best_baseline=interactive_affordance_probe
-oracle_success=0.37840
+Ablation utility:
+full_causal_counterfactual_affordance_v5 success=0.33372 cf_recall=1.00000 invalid=0.38490 regret=0.35076 utility=-0.44724 mechanism=0.34081
+minus_pose_counterfactuals success=0.28203 cf_recall=0.94212 invalid=0.41341 regret=0.38116 utility=-0.54996 mechanism=0.25019
+minus_support_counterfactuals success=0.27526 cf_recall=0.90197 invalid=0.42135 regret=0.38520 utility=-0.57888 mechanism=0.21551
+minus_semantic_role_counterfactuals success=0.29531 cf_recall=0.92364 invalid=0.41953 regret=0.38048 utility=-0.53990 mechanism=0.22374
+minus_contact_mode_counterfactuals success=0.27982 cf_recall=0.97322 invalid=0.43620 regret=0.38682 utility=-0.58683 mechanism=0.25197
+minus_counterfactual_contrastive_loss success=0.25560 cf_recall=0.20223 invalid=0.43737 regret=0.40225 utility=-0.61566 mechanism=0.15342
+minus_uncertainty_calibration success=0.33125 cf_recall=0.98465 invalid=0.40872 regret=0.35535 utility=-0.47303 mechanism=0.26907
+minus_utility_planner success=0.30208 cf_recall=1.00000 invalid=0.43333 regret=0.38522 utility=-0.56989 mechanism=0.32240
+observed_only_counterfactual_head success=0.11641 cf_recall=0.00000 invalid=0.54622 regret=0.50058 utility=-0.98508 mechanism=-0.07162
+support_only_counterfactual_head success=0.19323 cf_recall=0.00033 invalid=0.47383 regret=0.44057 utility=-0.75251 mechanism=0.08599
+
+Maximum combined stress:
+observed_affordance_map success=0.13208 cf_recall=0.00000 invalid=0.50931 regret=0.48193 utility=-0.90751
+multi_affordance_grasping success=0.17625 cf_recall=0.00000 invalid=0.47931 regret=0.45644 utility=-0.79590
+graph_conv_affordance success=0.20806 cf_recall=0.00000 invalid=0.45347 regret=0.43488 utility=-0.71606
+gaussian_grasp_map success=0.19097 cf_recall=0.00000 invalid=0.47097 regret=0.44179 utility=-0.75017
+vlm_spatial_affordance success=0.21347 cf_recall=0.00000 invalid=0.44694 regret=0.43110 utility=-0.70600
+diffusion_affordance_sampler success=0.25958 cf_recall=0.00000 invalid=0.37056 regret=0.37615 utility=-0.49288
+foundation_vlm_affordance success=0.23639 cf_recall=0.00000 invalid=0.43278 regret=0.40723 utility=-0.63032
+ensemble_uncertainty_affordance success=0.26028 cf_recall=0.00553 invalid=0.34556 regret=0.37102 utility=-0.45591
+interactive_affordance_probe success=0.33667 cf_recall=0.46922 invalid=0.13917 regret=0.24608 utility=-0.01852
+active_view_affordance_probe success=0.32597 cf_recall=0.39500 invalid=0.20903 regret=0.27754 utility=-0.13904
+robust_mpc_affordance_planner success=0.29931 cf_recall=0.00040 invalid=0.17208 regret=0.27347 utility=-0.07830
+counterfactual_affordance_map_v4 success=0.30431 cf_recall=0.39057 invalid=0.37681 regret=0.36778 utility=-0.47282
+causal_counterfactual_affordance_planner_v5 success=0.36889 cf_recall=0.93914 invalid=0.32472 regret=0.31977 utility=-0.29439
+
+Fixed-risk budget 0.05:
+low_signal_counterfactual_shift causal_counterfactual_affordance_planner_v5 coverage=0.00000 accepted_success=0.00000 accepted_invalid=0.00000 accepted_damage=0.00000
+low_signal_counterfactual_shift interactive_affordance_probe coverage=0.04653 accepted_success=0.26061 accepted_invalid=0.26715 accepted_damage=0.00000
+low_signal_counterfactual_shift active_view_affordance_probe coverage=0.00278 accepted_success=0.30000 accepted_invalid=0.10000 accepted_damage=0.00000
+low_signal_counterfactual_shift robust_mpc_affordance_planner coverage=0.00486 accepted_success=0.00000 accepted_invalid=0.05000 accepted_damage=0.00000
+low_signal_counterfactual_shift ensemble_uncertainty_affordance coverage=0.00000 accepted_success=0.00000 accepted_invalid=0.00000 accepted_damage=0.00000
+low_signal_counterfactual_shift diffusion_affordance_sampler coverage=0.00000 accepted_success=0.00000 accepted_invalid=0.00000 accepted_damage=0.00000
+combined_counterfactual_stress causal_counterfactual_affordance_planner_v5 coverage=0.00000 accepted_success=0.00000 accepted_invalid=0.00000 accepted_damage=0.00000
+combined_counterfactual_stress interactive_affordance_probe coverage=0.00694 accepted_success=0.08333 accepted_invalid=0.06667 accepted_damage=0.00000
+combined_counterfactual_stress active_view_affordance_probe coverage=0.00000 accepted_success=0.00000 accepted_invalid=0.00000 accepted_damage=0.00000
+combined_counterfactual_stress robust_mpc_affordance_planner coverage=0.00000 accepted_success=0.00000 accepted_invalid=0.00000 accepted_damage=0.00000
+combined_counterfactual_stress ensemble_uncertainty_affordance coverage=0.00000 accepted_success=0.00000 accepted_invalid=0.00000 accepted_damage=0.00000
+combined_counterfactual_stress diffusion_affordance_sampler coverage=0.00000 accepted_success=0.00000 accepted_invalid=0.00000 accepted_damage=0.00000
+
+Negative cases: 24
+terminal=KILL_ARCHIVE

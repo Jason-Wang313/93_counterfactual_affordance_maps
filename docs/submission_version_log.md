@@ -31,3 +31,12 @@
 - Confirmed paired counterfactual-recall difference is only `0.00128 +/- 0.00367`.
 - Confirmed paired regret reduction is negative at `-0.00940 +/- 0.00215`.
 - Updated child docs and paper source to keep the v4 KILL_ARCHIVE decision evidence-bound.
+
+## v5 - 2026-06-22 Expanded ICLR-Main Audit
+- Froze `docs/paper93_expanded_submission_plan_20260622.md` before editing/running.
+- Replaced the runner with an expanded CPU-only audit: 10 seeds, 6 tasks, 8 splits, 14 methods, 10 ablations, stress sweep, fixed-risk budgets, paired seed tests, and 24 negative cases.
+- Regenerated 215,040 main rollouts, 76,800 ablation rollouts, 604,800 stress rows, and 69,120 fixed-risk rows.
+- Found v5 improves over v4 and wins hard success/recall, but fails active-probe regret, safety, calibration, robust-utility, stress, fixed-risk coverage, and scope gates.
+- Generated a 25-page ICLR-style PDF with bright boxed clickable citations at `C:/Users/wangz/Downloads/93.pdf`.
+- Validated row counts, terminal tokens, PDF page count, citation/link annotations, no Desktop leak, and SHA-256 `5222B202BEC63CA70F040A2B621EBB65775F4B601D819B68C122773538A4CD60`.
+- Terminal decision: KILL_ARCHIVE.

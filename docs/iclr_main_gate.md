@@ -2,23 +2,33 @@
 
 Paper: 93 counterfactual_affordance_maps
 
-Existing v4 decision: KILL_ARCHIVE
+Latest decision: KILL_ARCHIVE
 
-Gate verdict: KILL_ARCHIVE
+Latest audit: v5 expanded audit, 2026-06-22
 
-Latest rerun: 2026-06-15
+Evidence digest: v5-expanded-counterfactual-affordance
 
-Evidence digest: v4-local-counterfactual-affordance
+Gate outcomes:
+
+- success_gate=True
+- active_probe_gate=False
+- recall_gate=True
+- safety_gate=False
+- calibration_gate=False
+- utility_gate=False
+- ablation_gate=True
+- stress_gate=False
+- fixed_risk_gate=False
+- scope_gate=False
 
 Fatal blockers:
-- Local synthetic evidence only.
-- Combined-stress task-success gate fails against `interactive_affordance_probe`.
-- Planning-regret gate fails against `interactive_affordance_probe`.
-- Counterfactual-recall gain is too small relative to uncertainty.
-- The active-probing baseline has lower invalid action rate and lower damage.
-- `support_only_counterfactual_head` captures a meaningful portion of the full mechanism in ablation.
-- No real robot or accepted high-fidelity manipulation benchmark.
-- No trained neural manipulation policy checkpoint or external validation.
-- No manual exhaustive related-work synthesis.
+
+- V5 buys hard-split success/recall with too much invalid action, damage, and regret.
+- Interactive probing remains the hard robust-utility reference.
+- Robust MPC remains a safer closed-loop deployment comparator.
+- V5 fixed-risk coverage is zero at budget 0.05 on both hard splits.
+- Calibration is worse than the best non-oracle calibration reference.
+- Maximum-stress utility is dominated by active probing.
+- Evidence remains local/simulated with no real robot or accepted high-fidelity manipulation benchmark.
 
 The only honest main-conference-safe decision is to archive rather than overclaim.
