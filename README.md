@@ -1,38 +1,51 @@
 # 93 Counterfactual Affordance Maps
 
-Submission-hardening version: v4.1 rerun audit
+Submission-hardening version: v5 expanded ICLR-main audit
 
 Terminal decision: KILL_ARCHIVE for ICLR main conference.
 
-This repository now contains a deterministic manipulation-affordance evidence audit for the claim that robots should map affordances under alternate grasps, poses, supports, and semantic roles. The rebuilt benchmark includes four tasks, five shifts, seven seeds, nine affordance methods, seven ablations, and a stress sweep.
+This repository contains a deterministic, CPU-only, RAM-light manipulation-affordance evidence audit for the claim that robots should map affordances under alternate grasps, poses, supports, semantic roles, occlusion states, and contact modes. The v5 rebuild expands the evidence to 10 seeds, 6 task families, 8 distribution splits, 14 methods, 10 ablations, a six-level stress sweep crossed with all splits, fixed-risk deployment budgets, paired seed tests, and 24 negative cases.
 
-The 2026-06-15 continuation rerun reproduced the same terminal decision: the proposed counterfactual map is useful locally, but active probing remains the stronger closed-loop baseline.
+The method under test is `causal_counterfactual_affordance_planner_v5`. It improves over v4 and several static affordance baselines, but it is not submission-ready because active probing and robust MPC remain stronger on the hostile deployment criteria.
 
 ## Key Result
 
-On combined counterfactual stress:
+Hard aggregate over low-signal and combined counterfactual stress:
 
-- Proposed counterfactual map: task success 0.347, AP 0.217, counterfactual recall 0.0089, regret 0.034.
-- Interactive affordance probe: task success 0.362, AP 0.227, counterfactual recall 0.0077, regret 0.024.
-- Graph-conv affordance: task success 0.323, AP 0.184, counterfactual recall 0.0034.
-- Paired task-success difference vs strongest non-oracle baseline: -0.0157 +/- 0.0202.
+- `causal_counterfactual_affordance_planner_v5`: success 0.33646, counterfactual recall 1.00000, invalid action 0.39323, damage 0.19531, robust utility -0.43149.
+- `interactive_affordance_probe`: success 0.29557, counterfactual recall 0.85359, invalid action 0.20521, damage 0.04427, robust utility -0.15992.
+- `robust_mpc_affordance_planner`: success 0.25833, invalid action 0.23594, damage 0.05859, robust utility -0.22369.
+- v5 beats active probing on hard success with paired lower95 0.01474, but fails regret, safety, calibration, robust-utility, stress, fixed-risk, and scope gates.
+- Fixed-risk budget 0.05 coverage for v5 is 0.00000 on both hard splits.
 
-The proposed method improves over static observed/graph/VLM affordance baselines, but it does not beat active probing decisively and lacks robot hardware or accepted high-fidelity validation.
+Terminal gate vector: success true, active-probe false, recall true, safety false, calibration false, utility false, ablation true, stress false, fixed-risk false, scope false.
+
+## Artifacts
+
+- Canonical PDF: `C:/Users/wangz/Downloads/93.pdf`
+- PDF pages: 25
+- PDF SHA-256: `5222B202BEC63CA70F040A2B621EBB65775F4B601D819B68C122773538A4CD60`
+- GitHub-safe raw stress artifact: `results/stress_sweep_raw.csv.gz`
+- Public repo: https://github.com/Jason-Wang313/93_counterfactual_affordance_maps
+- No PDF is copied to the visible Desktop.
 
 ## Reproduce Evidence
 
 ```powershell
+python -m py_compile src\run_experiment.py
 python src\run_experiment.py
 ```
 
-## Rebuild PDF
+## Rebuild Manuscript
 
 ```powershell
+python scripts\generate_manuscript.py
 cd paper
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
+bibtex main
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
+pdflatex -interaction=nonstopmode -halt-on-error main.tex
+Copy-Item .\main.pdf C:\Users\wangz\Downloads\93.pdf -Force
+cd ..
+python scripts\validate_submission_artifacts.py
 ```
-
-Canonical local PDF: `C:/Users/wangz/Downloads/93.pdf`
-
-No PDF should be copied to the visible Desktop.

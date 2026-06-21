@@ -1,4 +1,25 @@
-case,observed_failure,implication
-active_probe_matches_action_choice,interactive probing reaches similar or better task success despite weaker counterfactual map recall,closed-loop value does not require the full proposed representation in this benchmark
-semantic_occlusion_shift,VLM-style spatial affordances recover semantic matches that the counterfactual map over-penalizes,counterfactual geometry is not enough for language-conditioned affordance tasks
-support_only_ablation,support-only counterfactuals can match much of the full method on stacking-style tasks,the broad pose/support/semantic counterfactual mechanism is not cleanly isolated
+case_id,seed,task,split,episode,failure_mode,v5_score,v5_success,v5_invalid_action,v5_damage_rate,v5_regret,best_baseline,best_baseline_success,best_baseline_invalid_action,best_baseline_utility
+1809,6,support_sensitive_stacking,combined_counterfactual_stress,10,closed_loop_loss,0.5477537833639814,0,0,1,0.46491389606285466,diffusion_affordance_sampler,1,1,-1.0514718066757474
+1739,6,tool_use_regrasp,low_signal_counterfactual_shift,13,closed_loop_loss,0.4720858477545558,0,0,0,0.4226927037186589,diffusion_affordance_sampler,1,0,0.7592911785078356
+661,2,support_sensitive_stacking,low_signal_counterfactual_shift,22,closed_loop_loss,0.5213207974297841,0,0,0,0.4137425696534452,diffusion_affordance_sampler,1,0,0.7593738487495484
+2115,7,support_sensitive_stacking,combined_counterfactual_stress,21,closed_loop_loss,0.5505910408032756,0,0,0,0.4127385321438708,robust_mpc_affordance_planner,1,0,-0.10838964741806138
+1622,5,deformable_bag_retrieval,combined_counterfactual_stress,7,closed_loop_loss,0.5541783242655439,0,0,0,0.40848817959023426,diffusion_affordance_sampler,1,0,0.7098057484211976
+1907,6,deformable_bag_retrieval,combined_counterfactual_stress,2,closed_loop_loss,0.5280716382975044,0,0,0,0.40595838872181483,robust_mpc_affordance_planner,1,0,0.7870376845912784
+1897,6,deformable_bag_retrieval,low_signal_counterfactual_shift,23,closed_loop_loss,0.48969723762351947,0,0,0,0.40379686696152384,diffusion_affordance_sampler,1,1,-0.19286654346967705
+193,0,deformable_bag_retrieval,low_signal_counterfactual_shift,22,closed_loop_loss,0.5224040070664211,0,1,0,0.40340731902342486,robust_mpc_affordance_planner,1,1,-0.13242399918056935
+1663,5,articulated_drawer_handle_transfer,combined_counterfactual_stress,4,closed_loop_loss,0.5052324852365238,0,0,0,0.40217469498277647,diffusion_affordance_sampler,1,0,-0.1526115633464417
+1986,7,cluttered_rearrangement_pick,low_signal_counterfactual_shift,5,closed_loop_loss,0.5312103144068877,0,0,0,0.400415450554025,diffusion_affordance_sampler,1,0,-0.09368806600336269
+1567,5,occluded_container_opening,low_signal_counterfactual_shift,23,closed_loop_loss,0.4802978760382248,0,0,0,0.3984466828038143,active_view_affordance_probe,1,0,0.7636652674689983
+1511,5,support_sensitive_stacking,low_signal_counterfactual_shift,5,closed_loop_loss,0.4713579409438516,0,0,0,0.3963133926239,diffusion_affordance_sampler,1,1,-0.2428247435187246
+1985,7,cluttered_rearrangement_pick,low_signal_counterfactual_shift,4,closed_loop_loss,0.5182858096209326,0,0,0,0.39413979849556324,diffusion_affordance_sampler,1,0,0.7892434041714613
+668,2,support_sensitive_stacking,combined_counterfactual_stress,3,closed_loop_loss,0.530224112924871,0,0,0,0.39196387944911626,robust_mpc_affordance_planner,1,0,0.7847972020884598
+1519,5,support_sensitive_stacking,low_signal_counterfactual_shift,17,closed_loop_loss,0.446388568909026,0,0,0,0.3898079309657939,diffusion_affordance_sampler,1,1,-1.0140817761469412
+1779,6,support_sensitive_stacking,low_signal_counterfactual_shift,2,closed_loop_loss,0.46984042756121347,0,0,0,0.38980695508290186,interactive_affordance_probe,1,0,0.7566577647015101
+1097,3,articulated_drawer_handle_transfer,combined_counterfactual_stress,11,closed_loop_loss,0.5365587547885382,0,0,0,0.3884855225013673,diffusion_affordance_sampler,1,0,-0.12877243307184813
+1890,6,deformable_bag_retrieval,low_signal_counterfactual_shift,15,closed_loop_loss,0.47310228835759327,0,1,1,0.3859559891780134,diffusion_affordance_sampler,1,1,-1.060162968256804
+2199,7,deformable_bag_retrieval,combined_counterfactual_stress,6,closed_loop_loss,0.5150910908787921,0,0,0,0.38583649164500045,active_view_affordance_probe,1,0,0.7440316707551509
+533,1,articulated_drawer_handle_transfer,combined_counterfactual_stress,8,closed_loop_loss,0.5271440662215632,0,1,0,0.3854851323296462,robust_mpc_affordance_planner,1,1,-0.11786226860657113
+1617,5,deformable_bag_retrieval,combined_counterfactual_stress,0,closed_loop_loss,0.5971539714910519,0,0,0,0.38520957252074334,robust_mpc_affordance_planner,1,1,-0.126869864903573
+667,2,support_sensitive_stacking,combined_counterfactual_stress,2,closed_loop_loss,0.5263793778034964,0,0,0,0.3846494025715414,diffusion_affordance_sampler,1,1,-1.0502661314788748
+1109,3,articulated_drawer_handle_transfer,combined_counterfactual_stress,25,closed_loop_loss,0.563815571280599,0,1,0,0.3839365471096015,diffusion_affordance_sampler,1,1,-1.0133760147140753
+1345,4,deformable_bag_retrieval,combined_counterfactual_stress,12,closed_loop_loss,0.5761697402642795,0,0,0,0.38376980930331783,diffusion_affordance_sampler,1,1,-0.15701750199013706

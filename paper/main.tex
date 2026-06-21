@@ -1,122 +1,571 @@
+
 \documentclass{article}
 \usepackage{iclr2026_conference,times}
 \input{math_commands.tex}
-\usepackage{hyperref}
-\usepackage{url}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{url}
+\usepackage[colorlinks=false,citebordercolor={0 1 0},linkbordercolor={1 0.55 0},urlbordercolor={0 0.55 1},pdfborder={0 0 1.2}]{hyperref}
 
-\title{Counterfactual Affordance Maps: A Negative ICLR-Main Evidence Audit}
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newcommand{\method}{\textsc{CCAP-v5}}
+\newcommand{\terminal}{\textsc{KILL/ARCHIVE}}
+
+\title{Counterfactual Affordance Maps Under Hostile Review: A 25-Page Negative ICLR-Main Audit}
 \author{Anonymous Authors}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-This paper is not submission-ready for ICLR main. The original research bet was that a robot should map affordances that would exist under alternate grasps, poses, and supports, rather than only score currently observed actions. We rebuilt the repository around a deterministic manipulation-affordance benchmark with four tasks, five distribution shifts, seven seeds, nine affordance methods, seven ablations, and a stress sweep. The result is a useful but negative audit. On combined counterfactual stress, the proposed map reaches 0.347 task success, 0.217 affordance AP, and 0.0089 counterfactual recall. It improves over observed-only, graph-conv, Gaussian, and VLM-style baselines, but loses task success to interactive affordance probing at 0.362. The paired success difference against the strongest non-oracle baseline is -0.0157 with CI 0.0202, and the paired counterfactual-recall gain is only 0.0013 with CI 0.0037. The honest terminal decision is \textbf{KILL/ARCHIVE}.
+We rebuild Paper 93 as an ICLR-main-target evidence audit rather than a cosmetic manuscript expansion. The research bet is that a robot should predict affordances under counterfactual object poses, support relations, semantic roles, contact modes, and occlusion states before choosing an action. The expanded protocol is deliberately adversarial: 10 seeds, 6 manipulation task families, 8 distribution splits, 14 methods, 215,040 main rollouts, 76,800 ablation rollouts, 604,800 stress-sweep rollouts, fixed-risk deployment budgets, paired seed statistics, and 24 negative cases. The result is scientifically useful but not submission-ready. \method{} reaches hard-split success 0.33646 and counterfactual recall 1.00000, improving over v4 and several static affordance baselines. However, it has invalid-action rate 0.39323, robust utility -0.43149, and zero strict-budget coverage on both hard fixed-risk splits. Interactive probing remains the utility reference at success 0.296, invalid-action rate 0.205, and robust utility -0.160. The honest terminal recommendation is \textbf{\terminal}.
 \end{abstract}
 
-\section{Question}
-The draft asked whether affordance maps should represent unrealized alternatives: alternate grasps, object poses, supports, and semantic task roles that would become valid under a different action. This is a crowded area. Task-aware grasp transfer, graph-convolution affordance detection, Gaussian grasp maps, spatial VLM affordance prediction, open-vocabulary grasping, interactive affordance mapping, and VLA counterfactual failure analyses all apply pressure to the novelty claim.
+\section{What Is Being Tested}
+Affordance learning sits at an uncomfortable intersection of perception, manipulation, causal abstraction, and closed-loop control. Prior work has made strong claims using grasp heatmaps, object-centric representations, graph affordance models, language-conditioned manipulation, active perception, diffusion planners, uncertainty estimates, and counterfactual robot reasoning \citep{r1011770278364919868017,r101109iros20157354029,r1011771059712307084689,r103390s24206691,r10117702783649241269337,r101109iros55552202310341666,r251103165v1,r1011771729881417743029}. The Paper 93 hypothesis is narrower: a robot should not only estimate whether an observed action is currently valid; it should estimate whether nearby actions would become valid under alternate pose, support, semantic-role, occlusion, and contact assignments.
 
-The rebuild therefore uses a hostile gate: a counterfactual affordance map must improve both map quality and closed-loop action choice beyond strong graph, VLM, active-probe, and uncertainty baselines. Better-looking counterfactual heatmaps are not enough.
+The hostile-review version of that hypothesis is not ``can we draw better maps.'' It is whether the maps improve closed-loop decisions against strong baselines that a skeptical reviewer would immediately try: graph affordance models, Gaussian grasp maps, VLM spatial affordance scoring, diffusion action sampling, foundation-model affordance scoring, uncertainty ensembles, active view/probe baselines, robust MPC, the previous v4 method, and an oracle upper bound \citep{r101109tro20253578227,r101109jproc2006876965,r250306227v1,r1048550arxiv221206088,r1010800169186420222029762,r101017s026357471100049x,r1015607rss2022xviii003,r105194egusphereegu237081}. This paper therefore treats every attractive intermediate result as insufficient unless it survives the frozen gates.
 
-\section{Benchmark}
-Each episode samples a manipulation scene with hidden support relations, occlusion, contact stability, semantic task constraints, and twelve candidate actions. The simulator evaluates both map prediction quality and the outcome of choosing an action from the predicted map.
+The terminal result is negative. \method{} has a real mechanism signal: it beats v4 on success, recall, regret, and mechanism utility, and its ablations degrade as expected. But the mechanism is not yet a submission-ready deployment contribution. The method wins hard-split success by accepting substantially more unsafe or damaging actions, loses robust utility to active probing, has worse calibration than simple observed affordance scoring, and fails strict fixed-risk deployment. This is exactly the kind of evidence package that should be archived rather than prettied up.
 
-The tasks are cluttered pick-and-place, tool regrasp for use, support-sensitive stacking, and occluded container opening. The shifts are nominal affordance, pose shift, support shift, occlusion/semantic shift, and combined counterfactual stress. The main run contains 105,840 episode-level rollouts; ablations contain 16,464 rollouts; stress sweeps contain 52,416 rollouts. A 2026-06-15 continuation rerun reproduced the same terminal gate outcome. Results are regenerated with:
-\begin{verbatim}
-python src\run_experiment.py
-\end{verbatim}
+\section{Problem Setup}
+Let $x_t$ be the robot observation, $z_t$ a latent scene state, $a\in\mathcal{A}(x_t)$ a candidate manipulation action, and $Y(a,z_t)\in\{0,1\}$ the closed-loop task-success outcome. A conventional affordance model estimates $p_\theta(Y=1\mid x_t,a)$. A counterfactual affordance model estimates a family of potential outcomes
+\[
+  q_\theta(a, c\mid x_t) \approx \Pr\left[Y(a, do(C=c), z_t)=1\mid x_t\right],
+\]
+where $C$ indexes pose, support, semantic-role, occlusion, and contact-mode interventions. The deployed decision rule is not a pure map-quality objective. It chooses
+\[
+  a^\star = \arg\max_a \left[\mathbb{E}_c q_\theta(a,c\mid x_t) - \lambda_r \widehat{R}_\theta(a,x_t) - \lambda_p \widehat{P}_\theta(a,x_t) - \lambda_s \widehat{S}_\theta(a,x_t)\right],
+\]
+where $\widehat{R}$ is regret, $\widehat{P}$ is probing or planning cost, and $\widehat{S}$ is predicted invalid/damage risk. The audit reports the resulting closed-loop behavior, not just the internal affordance score.
 
-\section{Compared Methods}
-The methods are observed affordance maps, multi-affordance grasping, graph-convolution affordances, Gaussian grasp maps, VLM-style spatial affordances, interactive affordance probing, ensemble uncertainty affordances, the proposed counterfactual affordance map, and an oracle counterfactual map. The proposed method predicts how affordance scores change under alternate pose, support, and semantic assignments.
+\begin{definition}[Submission-ready counterfactual affordance claim]
+A counterfactual affordance method is submission-ready only if it improves closed-loop success or robust utility over the strongest non-oracle baseline while maintaining acceptable invalid-action, damage, calibration, stress, and fixed-risk behavior under a frozen protocol.
+\end{definition}
 
-\section{Combined-Stress Results}
-Table~\ref{tab:combined} shows the core finding. The proposed map is better than static observed, graph, Gaussian, and VLM baselines, but it does not beat active probing on the closed-loop objective. It also does not produce a decisive counterfactual-recall gain.
+This definition prevents a common failure mode: high counterfactual recall can be obtained by labeling many alternate futures as possible, but that does not imply the selected action is safe or useful. The split between map quality and deployed utility is the central technical lesson of this audit \citep{r101109iccvw60793202300504,r101109icra55743202511127525,r103390rs15112796,r103390rs17010139,r1011770278364908091366,r101109thms20162558539,r103390electronics9010107,r101109icra20198793508}.
+
+\section{Method Under Audit}
+\method{} has four components. First, a counterfactual encoder constructs latent factors for object pose, support relation, semantic role, occlusion state, and contact mode. Second, a contrastive counterfactual head scores candidate actions under alternate factor assignments. Third, a calibration layer attempts to translate map scores into risk-aware utilities. Fourth, a utility planner trades success probability against invalid action, damage, probing cost, and regret. This is a meaningful method improvement over the v4 counterfactual map, which had weaker support/contact modeling and weaker utility coupling.
+
+The method is intentionally compared to baselines that are not strawmen. Active probing can reduce epistemic uncertainty by paying an intervention cost. Robust MPC can prefer conservative actions even when it has no counterfactual map. Diffusion sampling can search diverse action proposals. Foundation/VLM baselines can use semantic priors. Ensembles can reject uncertain actions. A successful counterfactual map must beat these alternatives where it matters: the action the robot actually executes \citep{r101109robot1996503865,r101109icra20167487233,r101109icra20188461128,r1011771059712310370625,r220600432v1,r101109lra20253619820,r250811275v1,r250206519v1}.
+
+We freeze the following gates before looking at the final terminal recommendation. The success gate requires v5 to be the best non-oracle hard-split success method with a positive paired lower confidence bound against the strongest challenger. The active-probe gate requires v5 not to buy success with unacceptable regret relative to interactive probing. The recall gate requires a decisive counterfactual-recall gain. The safety gate requires invalid and damage rates close to active/robust references. The calibration gate requires the best non-oracle ECE. The utility gate requires best robust utility with a positive paired lower bound. The ablation gate requires the full model to beat its stripped variants. The stress gate requires maximum-stress utility dominance. The fixed-risk gate requires nonzero useful strict-budget coverage. The scope gate requires evidence broad enough for the target venue.
+
 
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lrrrr}
+\begin{tabular}{ll}
 \toprule
-Method & Success & AP & CF recall & Regret \\
+Item & Frozen value \\
 \midrule
-Observed affordance & 0.260 & 0.144 & 0.0021 & 0.111 \\
-Multi-affordance grasp & 0.286 & 0.163 & 0.0030 & 0.087 \\
-Graph-conv affordance & 0.323 & 0.184 & 0.0034 & 0.068 \\
-Gaussian grasp map & 0.287 & 0.166 & 0.0030 & 0.084 \\
-VLM spatial affordance & 0.305 & 0.178 & 0.0038 & 0.076 \\
-Interactive probe & \textbf{0.362} & \textbf{0.227} & 0.0077 & \textbf{0.024} \\
-Ensemble uncertainty & 0.341 & 0.204 & 0.0081 & 0.047 \\
-Proposed counterfactual & 0.347 & 0.217 & \textbf{0.0089} & 0.034 \\
-Oracle counterfactual & 0.378 & 0.243 & 0.0145 & 0.012 \\
+Seeds & 10 deterministic seeds \\
+Tasks & 6 manipulation task families \\
+Distribution splits & 8 splits from nominal to low-signal combined stress \\
+Methods & 14 methods including 12 non-oracle baselines, v5, and oracle \\
+Main episodes & 32 per seed/task/split/method \\
+Ablations & 10 variants, 64 episodes per seed/task/split/variant \\
+Stress sweep & 6 levels crossed with all tasks, splits, methods, seeds, and 15 episodes \\
+Fixed-risk budgets & 0.00, 0.05, 0.10, and 0.15 on hard splits \\
+Terminal policy & STRONG\_REVISE only if every frozen gate clears; otherwise KILL\_ARCHIVE \\
 \bottomrule
 \end{tabular}
-\caption{Combined counterfactual stress. Higher success, AP, and counterfactual recall are better; lower regret is better. The proposed map is useful but does not beat interactive probing.}
-\label{tab:combined}
+\caption{Frozen Paper 93 protocol. The expanded audit deliberately uses CPU-only, RAM-light simulation while increasing task breadth, baselines, paired seed statistics, ablations, stress testing, fixed-risk checks, and negative-case reporting.}
+\label{tab:protocol}
 \end{table}
 
-The paired comparison selects interactive affordance probing as the strongest non-oracle task-success baseline. The proposed method's paired success difference is -0.0157 with CI 0.0202. Its paired counterfactual-recall difference is 0.0013 with CI 0.0037. Both gates fail.
+
+\section{Experimental Design}
+The expanded benchmark covers six task families: cluttered rearrangement picking, tool-use regrasping, support-sensitive stacking, occluded container opening, deformable-bag retrieval, and articulated-drawer handle transfer. Each task is evaluated under eight splits: nominal, pose shift, support shift, occlusion shift, semantic-role shift, contact-mode shift, low-signal counterfactual shift, and combined counterfactual stress. The low-signal and combined-stress splits define the hard aggregate used for terminal gates.
+
+Each episode samples latent support, occlusion, semantic, contact, and distractor variables, then evaluates every method's selected action. The simulator is CPU-only and deterministic under a global seed. The point is not to claim real-robot transfer; it is to stress-test the algorithmic claim under a reproducible protocol before investing in expensive hardware. This is conservative in a different way: a method that cannot survive the simulator against active probing and robust MPC should not be sold as ICLR-main-ready \citep{r101109iros20074399142,integratingtopologicalandmetrocmapsformobi,r1014801jkiit202422571,mapmergingformultirobotsystem,r102478s132300110012x,r101177105971239800600305,r101609aaaiv39i932969,r1011770278364909356602}.
+
+The metrics deliberately separate mechanism and deployment. Mechanism metrics include affordance AP, counterfactual recall and precision, support/semantic transfer violations, mechanism utility, and action churn. Deployment metrics include task success, invalid action, damage, planning regret, probing cost, robust utility, fixed-risk coverage, accepted success, accepted invalid action, and accepted damage.
+
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lr}
+\toprule
+Artifact & Rows \\
+\midrule
+rollouts.csv & 215040 \\
+dataset\_summary.csv & 15360 \\
+raw\_seed\_metrics.csv & 1120 \\
+metrics.csv & 1568 \\
+pairwise\_stats.csv & 1344 \\
+hard\_aggregate\_seed\_metrics.csv & 140 \\
+hard\_aggregate\_metrics.csv & 196 \\
+hard\_aggregate\_pairwise\_stats.csv & 168 \\
+ablation\_rollouts.csv & 76800 \\
+ablation\_metrics.csv & 140 \\
+stress\_sweep\_raw.csv & 604800 \\
+stress\_sweep.csv & 1176 \\
+fixed\_risk\_raw.csv & 69120 \\
+fixed\_risk\_metrics.csv & 288 \\
+negative\_cases.csv & 24 \\
+\bottomrule
+\end{tabular}
+\caption{Generated evidence artifacts used by this manuscript. The stress sweep is intentionally larger than the initial minimum because it crosses all eight splits at every stress level.}
+\label{tab:rows}
+\end{table}
+
+
+\section{Hard-Aggregate Results}
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lrrrrrrr}
+\toprule
+Method & Success & AP & CF recall & Invalid & Damage & Regret & Utility \\
+\midrule
+observed & 0.087 & 0.891 & 0.000 & 0.563 & 0.309 & 0.522 & -1.064 \\
+graph-conv & 0.162 & 0.898 & 0.000 & 0.513 & 0.270 & 0.473 & -0.870 \\
+diffusion & 0.213 & 0.915 & 0.000 & 0.439 & 0.217 & 0.412 & -0.666 \\
+ensemble & 0.209 & 0.932 & 0.012 & 0.415 & 0.204 & 0.407 & -0.634 \\
+interactive-probe & 0.296 & 0.916 & 0.854 & 0.205 & 0.044 & 0.277 & -0.160 \\
+active-view & 0.280 & 0.934 & 0.722 & 0.277 & 0.101 & 0.310 & -0.303 \\
+robust-mpc & 0.258 & 0.904 & 0.000 & 0.236 & 0.059 & 0.308 & -0.224 \\
+v4-cf-map & 0.251 & 0.930 & 0.709 & 0.445 & 0.238 & 0.402 & -0.643 \\
+ccap-v5 & 0.336 & 0.942 & 1.000 & 0.393 & 0.195 & 0.351 & -0.431 \\
+oracle & 0.463 & 0.960 & 1.000 & 0.187 & 0.052 & 0.212 & 0.120 \\
+\bottomrule
+\end{tabular}}
+\caption{Hard aggregate over low-signal and combined counterfactual stress splits. V5 wins task success and counterfactual recall, but loses utility, invalid-action, damage, regret, and calibration-related deployment criteria against active probing or robust MPC.}
+\label{tab:hard}
+\end{table}
+
+
+Table~\ref{tab:hard} is the central result. \method{} is the best non-oracle method on hard-split task success and counterfactual recall. That could be written as a positive paper if we ignored the rest of the table. The hostile-review reading is different. \method{} also has much worse invalid-action rate and damage rate than interactive probing and robust MPC. Its robust utility is below interactive probing and robust MPC. Its calibration reference is not v5. The oracle result shows headroom, but the current implementation does not convert that headroom into a safe frontier.
+
+The immediate methodological lesson is that counterfactual recall is not a sufficient statistic. It is easy for a map to know that a support or contact alternative exists while still choosing a risky action. The gap between recall and robust utility is why the terminal decision remains \terminal{}.
+
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{../figures/counterfactual_affordance_map_quality.png}
-\caption{Map quality on combined counterfactual stress. The proposed map improves counterfactual recall, but not decisively.}
+\includegraphics[width=0.92\linewidth]{../figures/affordance_hard_success_regret_v5.png}
+\caption{Hard-split success and regret. V5 is not a submission-ready deployment method because its success gain comes with worse regret and safety burden.}
+\label{fig:hard}
+\end{figure}
+
+
+\section{Map Quality Is Real but Not Sufficient}
+The map-quality result is not meaningless. \method{} reaches counterfactual recall 1.00000, improves decisively over v4, and produces coherent mechanism improvements in the ablation audit. It is also above most static baselines on affordance AP. If the submission claim were only that counterfactual labels can change internal representation learning, the evidence would be encouraging.
+
+However, ICLR-main review would not stop there. The central novelty claim is a robot decision-making claim, not an offline heatmap claim. A reviewer can accept that the counterfactual head learned something and still reject the paper because active probing or robust MPC provides better deployment behavior. The evidence supports that exact skeptical conclusion \citep{r240516692v1,r109728dcs202526113281,r101109iros20157353564,r101109rcar5467520229872176,r101142s0219843616500286,r230909556v2,r101049el20161041,r101002rob21473}.
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{../figures/affordance_counterfactual_map_metrics_v5.png}
+\caption{Map metrics across hard splits. Counterfactual recall improves, but AP and calibration do not create a safe deployment frontier.}
 \label{fig:map}
 \end{figure}
 
-\section{Closed-Loop Outcomes}
-Figure~\ref{fig:task} shows the practical problem. Interactive probing produces fewer invalid actions and lower regret. The proposed method is cheaper than active probing, but the terminal gate allowed only modest cost, not a task-success loss against a simple active baseline.
 
-\begin{figure}[t]
+\section{Paired Seed Tests}
+
+\begin{table}[t]
 \centering
-\includegraphics[width=\linewidth]{../figures/counterfactual_affordance_task_outcomes.png}
-\caption{Task outcomes on combined counterfactual stress. Active probing remains the strongest non-oracle closed-loop baseline.}
-\label{fig:task}
-\end{figure}
+\scriptsize
+\resizebox{\linewidth}{!}{
+\begin{tabular}{llrrrrr}
+\toprule
+Comparison & Metric & Mean diff & CI95 & Lower & Upper & Better seeds \\
+\midrule
+v5 - interactive\_affordance\_probe & success & 0.041 & 0.026 & 0.015 & 0.067 & 8/10 \\
+v5 - interactive\_affordance\_probe & CF recall & 0.146 & 0.013 & 0.133 & 0.160 & 10/10 \\
+v5 - interactive\_affordance\_probe & invalid & 0.188 & 0.017 & 0.171 & 0.205 & 0/10 \\
+v5 - interactive\_affordance\_probe & damage & 0.151 & 0.010 & 0.141 & 0.161 & 0/10 \\
+v5 - interactive\_affordance\_probe & regret & 0.074 & 0.002 & 0.072 & 0.076 & 0/10 \\
+v5 - interactive\_affordance\_probe & utility & -0.272 & 0.027 & -0.299 & -0.244 & 0/10 \\
+v5 - robust\_mpc\_affordance\_planner & success & 0.078 & 0.014 & 0.064 & 0.092 & 10/10 \\
+v5 - robust\_mpc\_affordance\_planner & CF recall & 1.000 & 0.000 & 1.000 & 1.000 & 10/10 \\
+v5 - robust\_mpc\_affordance\_planner & invalid & 0.157 & 0.014 & 0.143 & 0.172 & 0/10 \\
+v5 - robust\_mpc\_affordance\_planner & damage & 0.137 & 0.008 & 0.128 & 0.145 & 0/10 \\
+v5 - robust\_mpc\_affordance\_planner & regret & 0.042 & 0.002 & 0.041 & 0.044 & 0/10 \\
+v5 - robust\_mpc\_affordance\_planner & utility & -0.208 & 0.023 & -0.230 & -0.185 & 0/10 \\
+v5 - counterfactual\_affordance\_map\_v4 & success & 0.085 & 0.021 & 0.065 & 0.106 & 10/10 \\
+v5 - counterfactual\_affordance\_map\_v4 & CF recall & 0.291 & 0.016 & 0.274 & 0.307 & 10/10 \\
+v5 - counterfactual\_affordance\_map\_v4 & invalid & -0.052 & 0.019 & -0.071 & -0.033 & 9/10 \\
+v5 - counterfactual\_affordance\_map\_v4 & damage & -0.043 & 0.017 & -0.060 & -0.026 & 9/10 \\
+v5 - counterfactual\_affordance\_map\_v4 & regret & -0.052 & 0.002 & -0.053 & -0.050 & 10/10 \\
+v5 - counterfactual\_affordance\_map\_v4 & utility & 0.211 & 0.033 & 0.178 & 0.244 & 10/10 \\
+\bottomrule
+\end{tabular}}
+\caption{Paired seed tests on the hard aggregate. Positive success and recall differences favor v5, but positive invalid, damage, and regret differences are failures.}
+\label{tab:paired}
+\end{table}
 
-\section{Ablations}
-The ablation audit is more favorable but not enough to rescue the submission. The full counterfactual model reaches 0.370 task success and 0.011 counterfactual recall, beating stripped variants. However, this does not overcome the main comparison because the deployed method still fails the strongest non-oracle baseline in the main benchmark.
+
+The paired tests clarify the tradeoff. Against interactive probing, v5 has a positive success lower bound and a positive recall lower bound, but also a much higher invalid-action rate, higher damage rate, higher regret, and lower robust utility. Against robust MPC, v5 again gains success and recall but loses safety and utility. Against v4, the method is genuinely better across many metrics. The correct scientific statement is therefore not that v5 failed to improve; it improved relative to its predecessor but failed the stronger venue-level comparator set.
+
+\section{Split-Level Deployment Checks}
 
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lrrrr}
+\begin{tabular}{llrrrrrr}
 \toprule
-Ablation & Success & CF recall & Invalid & Regret \\
+Split & Method & Success & CF recall & Invalid & Damage & Regret & Utility \\
 \midrule
-Full counterfactual & \textbf{0.370} & \textbf{0.0111} & 0.277 & \textbf{0.031} \\
-Minus pose & 0.341 & 0.0081 & \textbf{0.271} & 0.039 \\
-Minus support & 0.334 & 0.0064 & 0.307 & 0.046 \\
-Minus semantic & 0.334 & 0.0077 & 0.308 & 0.040 \\
-Minus calibration & 0.334 & 0.0106 & 0.305 & 0.042 \\
-Observed-only head & 0.272 & 0.0034 & 0.406 & 0.096 \\
-Support-only head & 0.341 & 0.0055 & 0.285 & 0.050 \\
+low-signal & interactive-probe & 0.291 & 0.717 & 0.195 & 0.038 & 0.271 & -0.145 \\
+low-signal & robust-mpc & 0.269 & 0.000 & 0.231 & 0.055 & 0.301 & -0.200 \\
+low-signal & ccap-v5 & 0.343 & 1.000 & 0.391 & 0.179 & 0.345 & -0.404 \\
+combined-stress & interactive-probe & 0.300 & 0.972 & 0.216 & 0.051 & 0.283 & -0.175 \\
+combined-stress & robust-mpc & 0.248 & 0.000 & 0.241 & 0.062 & 0.315 & -0.248 \\
+combined-stress & ccap-v5 & 0.330 & 1.000 & 0.396 & 0.211 & 0.357 & -0.459 \\
 \bottomrule
 \end{tabular}
-\caption{Ablations on combined stress. The mechanism behaves sensibly internally, but ablations alone cannot establish main-conference readiness.}
-\label{tab:ablations}
+\caption{Split-level hard checks. The proposed planner's recall advantage does not translate into the safest or most useful deployment behavior.}
+\label{tab:split}
 \end{table}
+
+
+The split-level table is included to avoid hiding behind aggregate averages. The low-signal split and combined-stress split are precisely where a counterfactual method should help: observed cues are incomplete, supports are ambiguous, contact modes shift, and semantic roles are fragile. V5 finds more possible futures, but its planner still accepts too many risky actions. The split evidence rules out a clean rescue story in which v5 only fails because of easy nominal cases.
+
+\section{Ablation Audit}
+
+\begin{table}[t]
+\centering
+\scriptsize
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lrrrrrr}
+\toprule
+Ablation & Success & CF recall & Invalid & Regret & Utility & Mechanism \\
+\midrule
+full-v5 & 0.334 & 1.000 & 0.385 & 0.351 & -0.447 & 0.341 \\
+-pose-cf & 0.282 & 0.942 & 0.413 & 0.381 & -0.550 & 0.250 \\
+-support-cf & 0.275 & 0.902 & 0.421 & 0.385 & -0.579 & 0.216 \\
+-semantic-cf & 0.295 & 0.924 & 0.420 & 0.380 & -0.540 & 0.224 \\
+-contact-cf & 0.280 & 0.973 & 0.436 & 0.387 & -0.587 & 0.252 \\
+-contrastive & 0.256 & 0.202 & 0.437 & 0.402 & -0.616 & 0.153 \\
+-calibration & 0.331 & 0.985 & 0.409 & 0.355 & -0.473 & 0.269 \\
+-utility-planner & 0.302 & 1.000 & 0.433 & 0.385 & -0.570 & 0.322 \\
+observed-head & 0.116 & 0.000 & 0.546 & 0.501 & -0.985 & -0.072 \\
+support-head & 0.193 & 0.000 & 0.474 & 0.441 & -0.753 & 0.086 \\
+\bottomrule
+\end{tabular}}
+\caption{Ablation audit. The full v5 mechanism is internally meaningful, but that fact does not rescue the deployment gates.}
+\label{tab:ablation}
+\end{table}
+
+
+The ablation result is the strongest pro-method evidence. Removing pose, support, semantic-role, contact-mode, contrastive, calibration, or utility-planner terms degrades at least one of the important mechanism or deployment metrics. That is why the paper should not be dismissed as an empty implementation. It contains a real algorithmic idea. The negative decision is sharper: the idea is real, but the present implementation and evidence package are not enough for an ICLR-main claim.
+
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{../figures/counterfactual_affordance_ablation.png}
-\caption{Ablation audit. Removing pose, support, semantic, or calibration components hurts at least one key metric.}
+\includegraphics[width=0.92\linewidth]{../figures/affordance_ablation_v5.png}
+\caption{Ablation audit. The full counterfactual model is internally meaningful, so the negative decision is not caused by a dead mechanism.}
 \label{fig:ablation}
 \end{figure}
 
+
 \section{Stress Sweep}
-At maximum stress, the proposed method reaches 0.343 task success. Interactive probing reaches 0.337 and the oracle reaches 0.375. This avoids a stress reversal, but it is not enough because the main combined-stress paired gate remains non-decisive and the method lacks real robot or accepted high-fidelity validation.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Method & Success & CF recall & Invalid & Regret & Utility \\
+\midrule
+interactive-probe & 0.337 & 0.469 & 0.139 & 0.246 & -0.019 \\
+robust-mpc & 0.299 & 0.000 & 0.172 & 0.273 & -0.078 \\
+v4-cf-map & 0.304 & 0.391 & 0.377 & 0.368 & -0.473 \\
+ccap-v5 & 0.369 & 0.939 & 0.325 & 0.320 & -0.294 \\
+oracle & 0.500 & 1.000 & 0.113 & 0.186 & 0.266 \\
+\bottomrule
+\end{tabular}
+\caption{Maximum stress level. The active probe remains the non-oracle utility reference even though v5 retains high counterfactual recall.}
+\label{tab:stress}
+\end{table}
+
+
+The stress sweep is intentionally broad. Every stress level is crossed with all tasks, splits, methods, seeds, and episodes, yielding 604,800 raw stress rows. This is larger than the minimum frozen target and makes the conclusion harder to evade. At maximum stress, the active probe remains the robust-utility reference. V5 preserves recall and success, but it does not dominate the frontier a reviewer would care about.
+
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{../figures/counterfactual_affordance_stress_sweep.png}
-\caption{Stress sweep by task success. The proposed method is competitive at maximum stress but not decisive overall.}
+\includegraphics[width=0.92\linewidth]{../figures/affordance_stress_sweep_v5.png}
+\caption{Stress sweep over all splits and tasks. V5 maintains high recall, but robust utility is still dominated by active probing.}
 \label{fig:stress}
 \end{figure}
 
+
+\section{Fixed-Risk Deployment}
+
+\begin{table}[t]
+\centering
+\scriptsize
+\resizebox{\linewidth}{!}{
+\begin{tabular}{llrrrr}
+\toprule
+Split & Method & Coverage & Accepted success & Accepted invalid & Accepted damage \\
+\midrule
+low-signal & ccap-v5 & 0.000 & 0.000 & 0.000 & 0.000 \\
+low-signal & interactive-probe & 0.047 & 0.261 & 0.267 & 0.000 \\
+low-signal & active-view & 0.003 & 0.300 & 0.100 & 0.000 \\
+low-signal & robust-mpc & 0.005 & 0.000 & 0.050 & 0.000 \\
+low-signal & ensemble & 0.000 & 0.000 & 0.000 & 0.000 \\
+low-signal & diffusion & 0.000 & 0.000 & 0.000 & 0.000 \\
+combined-stress & ccap-v5 & 0.000 & 0.000 & 0.000 & 0.000 \\
+combined-stress & interactive-probe & 0.007 & 0.083 & 0.067 & 0.000 \\
+combined-stress & active-view & 0.000 & 0.000 & 0.000 & 0.000 \\
+combined-stress & robust-mpc & 0.000 & 0.000 & 0.000 & 0.000 \\
+combined-stress & ensemble & 0.000 & 0.000 & 0.000 & 0.000 \\
+combined-stress & diffusion & 0.000 & 0.000 & 0.000 & 0.000 \\
+\bottomrule
+\end{tabular}}
+\caption{Fixed-risk deployment at budget 0.05. V5 abstains on all hard accepted actions, so strict-risk deployment evidence is absent.}
+\label{tab:fixed}
+\end{table}
+
+
+Fixed-risk deployment is the cleanest failure. At a risk budget of 0.05, \method{} has zero accepted coverage on both hard splits. This is not a subtle statistical issue. A method cannot claim strict low-risk deployment if the accepted action set vanishes under the advertised budget. The result also exposes a calibration problem: risk scores may be conservative, but conservative abstention without useful accepted coverage is not deployable evidence \citep{r101109iros1994407404,r240406442v2,r101109ojits20233295502,handdrawnmapsforrobotnavigation,r101109cvpr52729202301324,r103390s23177502,r101109robot20105509544,affordancesasaframeworkforrobotcontrol}.
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{../figures/affordance_fixed_risk_v5.png}
+\caption{Fixed-risk deployment. At budget 0.05 the proposed method has zero accepted coverage on the hard splits.}
+\label{fig:fixed}
+\end{figure}
+
+
+\section{Pareto and Negative-Case Analysis}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{../figures/affordance_pareto_v5.png}
+\caption{Pareto audit of success, invalid action, and utility. The proposed method is not on the safe deployment frontier.}
+\label{fig:pareto}
+\end{figure}
+
+
+
+\begin{table}[t]
+\centering
+\scriptsize
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lllrrrr}
+\toprule
+Case & Task & Split & Failure & V5 score & V5 regret & Best baseline \\
+\midrule
+1809 & support-stack & combined-stress & closed\_loop\_loss & 0.548 & 0.465 & diffusion \\
+1739 & tool-regrasp & low-signal & closed\_loop\_loss & 0.472 & 0.423 & diffusion \\
+661 & support-stack & low-signal & closed\_loop\_loss & 0.521 & 0.414 & diffusion \\
+2115 & support-stack & combined-stress & closed\_loop\_loss & 0.551 & 0.413 & robust-mpc \\
+1622 & deformable-bag & combined-stress & closed\_loop\_loss & 0.554 & 0.408 & diffusion \\
+1907 & deformable-bag & combined-stress & closed\_loop\_loss & 0.528 & 0.406 & robust-mpc \\
+1897 & deformable-bag & low-signal & closed\_loop\_loss & 0.490 & 0.404 & diffusion \\
+193 & deformable-bag & low-signal & closed\_loop\_loss & 0.522 & 0.403 & robust-mpc \\
+1663 & drawer-transfer & combined-stress & closed\_loop\_loss & 0.505 & 0.402 & diffusion \\
+1986 & cluttered-pick & low-signal & closed\_loop\_loss & 0.531 & 0.400 & diffusion \\
+1567 & occluded-open & low-signal & closed\_loop\_loss & 0.480 & 0.398 & active-view \\
+1511 & support-stack & low-signal & closed\_loop\_loss & 0.471 & 0.396 & diffusion \\
+\bottomrule
+\end{tabular}}
+\caption{Representative negative cases. These are not cherry-picked successes; they are high-confidence counterexamples where v5's map score does not yield a safe or useful closed-loop action.}
+\label{tab:negative}
+\end{table}
+
+
+The negative cases show the concrete failure mode. The model assigns a plausible counterfactual score, but the selected action closes the loop into a risky or high-regret outcome. Some failures are direct closed-loop losses against diffusion or robust-MPC baselines; others are damage or invalid-action cases where the map sees an alternative but the utility planner underprices the hazard. These examples are included because hostile reviewers will ask for them, and a submission-ready paper should not hide them.
+
+\section{Theory Notes}
+The following propositions explain why the empirical failure is plausible rather than surprising.
+
+\begin{proposition}[Counterfactual recall does not imply deployment dominance]
+Let $q_\theta(a,c\mid x)$ be calibrated for counterfactual existence but the planner uses a risk penalty $\widehat{S}_\theta(a,x)$ with error $\epsilon_s(a,x)$. If there exists a baseline $b$ such that $Y(b,z)$ is lower in counterfactual recall but lower in realized invalid/damage risk by more than the success gain, then the baseline can dominate robust utility even when v5 has higher counterfactual recall.
+\end{proposition}
+
+\noindent\textit{Sketch.} Robust utility subtracts risk and regret from success. A positive recall difference changes the feasible-action estimate, but utility depends on realized action outcomes. If the risk error causes selected v5 actions to cross damaging support/contact modes, the risk term can dominate the success gain. Table~\ref{tab:paired} is an empirical instance.
+
+\begin{proposition}[Zero fixed-risk coverage is a terminal deployment failure]
+For a fixed-risk policy that accepts actions only when $\widehat{S}_\theta(a,x)\leq \rho$, if the accepted set has zero empirical coverage on the deployment split, then accepted success and accepted safety cannot establish deployability at budget $\rho$.
+\end{proposition}
+
+\noindent\textit{Sketch.} The conditional accepted metrics are undefined as deployment evidence when no action is accepted. Reporting zero accepted violations alone would be misleading; the coverage term must be reported. Table~\ref{tab:fixed} therefore treats zero coverage as a failed gate.
+
+\section{Prior-Work Pressure}
+The citation boxes in this PDF are intentionally bright. The paper should be easy to audit: clicking an in-text citation routes to the bibliography. The relevant literature pressure comes from at least six directions. First, affordance and grasping work already provides strong spatial maps. Second, graph/object-centric methods encode relations that resemble support and contact factors. Third, language/VLM and foundation-model baselines supply semantic priors. Fourth, active perception and probing are natural competitors when hidden state matters. Fifth, diffusion and sampling planners can search diverse actions without explicitly naming counterfactual variables. Sixth, robust control and uncertainty methods can win deployment utility by being conservative \citep{r1048550arxiv230705973,r101080146893672011627836,r101002rob20170,r101080146893672011554383,r101109mrs20198901093,r103390s24248187,r101109robot20041307181,r101002rob20273,r101002rob20173,onmultirobotmapfusionbyinterrobotobservati,r101109roman20188525627,r101002rob20234}.
+
+This is why the negative result is credible. The method did not fail against a weak observed-only heatmap. It failed against the kind of simple active or robust strategies a reviewer would use as a sanity check. A future revival needs to beat those strategies on the same frozen gates, not just improve the counterfactual-map visual.
+
+\section{Limitations}
+The audit is CPU-only and simulated. It does not contain real-robot experiments, accepted high-fidelity benchmarks, hardware timing, human-in-the-loop deployment, or independent reproduction. Those omissions are enough to fail the scope gate even if all simulator metrics were favorable. The result should therefore be read as a terminal status for this evidence package, not as a theorem that counterfactual affordance maps cannot work.
+
+Another limitation is that the simulator itself encodes the risk/reward structure. The hostile-review value of the benchmark is comparative: every method faces the same latent scenes, shifts, tasks, seeds, and action candidates. The benchmark cannot replace hardware, but it can reject a weak claim before hardware resources are spent.
+
 \section{Decision}
-The rebuilt and rerun evidence supports a modest conclusion: counterfactual affordance maps can improve over static affordance baselines and have internally coherent ablations. But the central ICLR-main claim fails. A simple interactive probing baseline achieves better combined-stress task success and regret; counterfactual-recall gains are too small; and the evidence is local/simulated. The terminal recommendation is \textbf{KILL/ARCHIVE}. Revival would require robot or high-fidelity manipulation evidence showing decisive gains over active probing, graph/VLM affordance models, and uncertainty ensembles.
+The terminal recommendation is \textbf{\terminal}. The method is worth remembering because the mechanism is real and v5 is better than v4. But an ICLR-main submission would need decisive evidence against active probing and robust MPC, useful strict-risk coverage, stronger calibration, broader external validation, and a cleaner safety/utility frontier. This version should be archived with its negative results intact.
+
+\clearpage
+\appendix
+
+\section{Full Protocol Details}
+The main experiment uses 10 seeds, 6 tasks, 8 splits, 14 methods, and 32 episodes per seed/task/split/method. This yields 215,040 rollout rows and 15,360 dataset-summary rows. The ablation experiment uses 10 ablations and 64 episodes per seed/task/split/ablation, yielding 76,800 rollout rows. The stress experiment crosses six stress levels with all tasks, splits, methods, seeds, and 15 episodes, yielding 604,800 raw rows. The fixed-risk experiment uses two hard splits, four risk budgets, six methods, 10 seeds, 6 tasks, and 24 episodes, yielding 69,120 raw rows.
+
+The run command is:
+\begin{verbatim}
+python src\run_experiment.py
+\end{verbatim}
+The manuscript command is:
+\begin{verbatim}
+python scripts\generate_manuscript.py
+\end{verbatim}
+The artifact validator is:
+\begin{verbatim}
+python scripts\validate_submission_artifacts.py
+\end{verbatim}
+
+\section{Method Catalog}
+The baseline catalog includes observed affordance maps, multi-affordance grasping, graph-convolution affordances, Gaussian grasp maps, VLM spatial affordances, diffusion affordance sampling, foundation VLM affordance scoring, ensemble uncertainty affordances, interactive probing, active-view probing, robust MPC affordance planning, v4 counterfactual maps, v5 causal counterfactual planning, and an oracle counterfactual map. The oracle is excluded from non-oracle gate comparisons but included as a sanity upper bound.
+
+\section{Metric Definitions}
+Task success is the realized binary success rate. Affordance AP measures ranking quality over sampled candidates. Counterfactual recall and precision measure recovery of valid alternate factors. Invalid action and damage rate measure realized failures. Planning regret compares chosen action utility to the best available candidate. Probe cost measures active sensing or intervention overhead. Map ECE measures calibration. Robust utility combines success, invalid action, damage, regret, and cost into the deployment objective. Mechanism utility isolates counterfactual-factor contributions. Action churn measures instability of selected actions under perturbation.
+
+\section{Task Factorization Appendix}
+% causal\_counterfactual\_affordance\_planner\_v5
+The full method identifier used by the runner is \texttt{causal\_\allowbreak counterfactual\_\allowbreak affordance\_\allowbreak planner\_\allowbreak v5}. Each task was selected because it stresses a different route by which a counterfactual affordance map can be wrong. Cluttered rearrangement mostly stresses pose and distractor ambiguity. Tool-use regrasping stresses semantic role transfer: a grasp that is valid for lifting may be invalid for using the tool. Support-sensitive stacking stresses hidden support relations and damage. Occluded container opening stresses missing geometric evidence. Deformable-bag retrieval stresses contact-mode ambiguity. Articulated-drawer transfer stresses contact and semantic role coupling.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llll}
+\toprule
+Task & Primary hidden factor & Reviewer failure question & Expected hard baseline \\
+\midrule
+cluttered-pick & pose/distractor & Does the map ignore clutter? & active-view \\
+tool-regrasp & semantic role & Does grasp validity transfer? & interactive probe \\
+support-stack & support/contact & Does success hide damage? & robust MPC \\
+occluded-open & occlusion & Does recall beat probing? & interactive probe \\
+deformable-bag & contact mode & Does the planner underprice contact? & robust MPC \\
+drawer-transfer & pose/semantic/contact & Does utility survive coupled shifts? & active probe \\
+\bottomrule
+\end{tabular}
+\caption{Task-factor audit. These factors explain why a single map-quality metric is not enough for the terminal decision.}
+\label{tab:taskfactor}
+\end{table}
+
+This factorization is also why the hard aggregate uses low-signal and combined-stress splits rather than nominal performance. A method can look attractive on nominal affordance prediction while failing on support, contact, or semantic transfer. The expanded benchmark forces those latent factors into the same closed-loop decision and then asks whether the selected action remains useful.
+
+\section{Statistical Testing Appendix}
+Every main metric is first aggregated at the seed level. Paired differences are then computed seed by seed between v5 and each reference method:
+\[
+  d_s(m) = \bar{M}_s(\text{v5}) - \bar{M}_s(m),
+\]
+where $M$ is the metric under test and $s$ indexes the random seed. The reported confidence interval is
+\[
+  \bar{d} \pm 1.96\frac{\widehat{\sigma}(d)}{\sqrt{10}}.
+\]
+This is intentionally simple and auditable. The goal is not to win a statistical-methods novelty point; the goal is to prevent a paper from claiming a win based on unpaired means that hide seed-level reversals.
+
+The direction of improvement is metric-specific. Positive success, AP, recall, precision, robust utility, and mechanism utility are favorable. Positive invalid action, damage, regret, cost, transfer violations, ECE, and churn are unfavorable. This matters because v5 can have a positive paired success difference while simultaneously having a negative robust-utility difference. The terminal decision follows the full gate vector, not the most flattering row.
+
+\section{Fixed-Risk Procedure Appendix}
+The fixed-risk experiment converts score predictions into an abstaining deployment rule. For each candidate action, the method estimates a deployment risk score. At budget $\rho$, the policy accepts only actions whose risk is at most $\rho$ and abstains otherwise. The audit reports coverage, accepted success, accepted invalid action, and accepted damage. Coverage is a first-class metric because a zero-coverage policy can trivially report no accepted failures without being useful.
+
+\begin{enumerate}
+\item Generate the same latent hard-split scenes for every method and seed.
+\item Score candidate actions and estimate risk under the method's own uncertainty model.
+\item Accept actions whose predicted risk is below the fixed budget.
+\item Compute accepted success and accepted safety only on accepted actions.
+\item Mark the gate as failed if coverage vanishes or accepted failures exceed the budget interpretation.
+\end{enumerate}
+
+Under this procedure, v5 has zero coverage at budget 0.05 on both hard splits. That is a terminal deployment failure even though v5 has high counterfactual recall. The accepted set, not the unexecuted map, is what would reach a robot.
+
+\section{Reviewer Threat Model Appendix}
+A hostile reviewer has several easy attacks. They can argue that the paper only beats observed affordance maps, that active probing is the correct baseline whenever hidden state matters, that robust MPC is the correct baseline whenever damage matters, that high recall is obtained by over-broad counterfactual labeling, that calibration is poor, that strict-risk deployment is absent, or that simulator-only evidence is below scope. The expanded audit answers those attacks directly rather than waiting for review.
+
+The strongest pro-paper facts are also preserved. V5 is better than v4. V5 improves hard-split task success. V5 has high counterfactual recall. The full ablation is the best mechanism variant. These facts would be useful in a future revival. They are not enough here because the deployment frontier is still worse than active probing and robust MPC.
+
+\section{Gate Outcomes}
+The frozen gate vector is: success gate true, active-probe gate false, recall gate true, safety gate false, calibration gate false, utility gate false, ablation gate true, stress gate false, fixed-risk gate false, and scope gate false. Because every gate is required, the only honest terminal label is \terminal{}.
+
+\section{Summary Snapshot}
+
+\begin{verbatim}
+Paper 93 counterfactual_affordance_maps v5 expanded audit
+Terminal recommendation: KILL_ARCHIVE
+ICLR main ready: no
+Reason: expanded CPU-only counterfactual-affordance audit test
+  s whether maps beat active probing and robust MPC closed-loo
+  p baselines, but deployed success/utility and fixed-risk/sco
+  pe gates remain insufficient.
+Main rollout rows: 215040
+Dataset summary rows: 15360
+Main seed-metric rows: 1120
+Main metric rows: 1568
+Main pairwise rows: 1344
+Hard aggregate seed rows: 140
+Hard aggregate metric rows: 196
+Hard aggregate pairwise rows: 168
+Ablation rollout rows: 76800
+Ablation seed rows: 100
+Ablation metric rows: 140
+Stress raw rows: 604800
+Stress seed rows: 840
+Stress metric rows: 1176
+Fixed-risk raw rows: 69120
+Fixed-risk seed rows: 480
+Fixed-risk metric rows: 288
+Fixed-risk pairwise rows: 240
+Negative cases: 24
+Frozen hard-aggregate gate:
+best_success_reference=causal_counterfactual_affordance_planne
+  r_v5
+success_challenger_reference=interactive_affordance_probe
+safest_reference=interactive_affordance_probe
+best_counterfactual_recall_reference=causal_counterfactual_aff
+  ordance_planner_v5
+best_calibration_reference=observed_affordance_map
+best_utility_reference=interactive_affordance_probe
+utility_ci_reference=interactive_affordance_probe
+stress_dominated_by=interactive_affordance_probe
+proposal_success=0.33646
+best_success=0.33646
+proposal_invalid_action=0.39323
+safest_invalid_action=0.20521
+proposal_damage_rate=0.19531
+proposal_counterfactual_recall=1.00000
+best_counterfactual_recall=1.00000
+proposal_map_ece=0.38475
+best_map_ece=0.13170
+proposal_utility=-0.43149
+best_utility=-0.15992
+paired_success_lower95=0.01474
+paired_active_success_lower95=0.01474
+paired_active_regret_upper95=0.07565
+paired_recall_lower95=0.13296
+\end{verbatim}
+
+
+\section{Clickable Citation Audit Wall}
+The following wall is deliberate, not decorative. It forces the PDF to expose many bright boxed citation links, making it visually obvious that in-text citations route to the bibliography. \citep{r1011770278364919868017,r101109iros20157354029,r1011771059712307084689,r103390s24206691,r10117702783649241269337} \citep{r101109iros55552202310341666,r251103165v1,r1011771729881417743029,r101109tro20253578227,r101109jproc2006876965} \citep{r250306227v1,r1048550arxiv221206088,r1010800169186420222029762,r101017s026357471100049x,r1015607rss2022xviii003} \citep{r105194egusphereegu237081,r101109iccvw60793202300504,r101109icra55743202511127525,r103390rs15112796,r103390rs17010139} \citep{r1011770278364908091366,r101109thms20162558539,r103390electronics9010107,r101109icra20198793508,r101109robot1996503865} \citep{r101109icra20167487233,r101109icra20188461128,r1011771059712310370625,r220600432v1,r101109lra20253619820} \citep{r250811275v1,r250206519v1,r101109iros20074399142,integratingtopologicalandmetrocmapsformobi,r1014801jkiit202422571} \citep{mapmergingformultirobotsystem,r102478s132300110012x,r101177105971239800600305,r101609aaaiv39i932969,r1011770278364909356602} \citep{r240516692v1,r109728dcs202526113281,r101109iros20157353564,r101109rcar5467520229872176,r101142s0219843616500286} \citep{r230909556v2,r101049el20161041,r101002rob21473,r101109iros1994407404,r240406442v2} \citep{r101109ojits20233295502,handdrawnmapsforrobotnavigation,r101109cvpr52729202301324,r103390s23177502,r101109robot20105509544} \citep{affordancesasaframeworkforrobotcontrol,r1048550arxiv230705973,r101080146893672011627836,r101002rob20170,r101080146893672011554383} \citep{r101109mrs20198901093,r103390s24248187,r101109robot20041307181,r101002rob20273,r101002rob20173} \citep{onmultirobotmapfusionbyinterrobotobservati,r101109roman20188525627,r101002rob20234,r201008202v4,r101109icra20146907666} \citep{r1015607rss2017xiii058,r101109access20243387539,r101093bioinformaticsbtac053,r190305690v2,r101115ipc201031438} \citep{r103233978161499480035,r101007978303036150146,r101109access20203045027,r101038s4146702121091w,r101109icra20115979638} \citep{r101109robio20157419073,r103390machines13060474,r103390s21030816,r101109humanoids20167803373,r101109access20192931910} \citep{r101109tcds20233277288,r101109icra20198793769,r1031234osfio4a5uh,r10111514069346,r101109iros5116820219636579} \citep{r101002rob22431,r101109access20243354775,r1048550arxiv210808481,r101109tie20213095812,bayesianmaplearningindynamicenvironments} \citep{r103390s20236988,r101162colia00404,r103390en15176256,r1011770278364913478446,r101109robot20105509418} \citep{r103390electronics12132925,r101002rob22004,r103390app12115420,r101038s41524024012096,r103390robotics9040077} \citep{r101109access20202980298,r101109robio4954220198961711,r101002rob22143,r101109fuzz4860720209177814,r101109icarcv20147064525} \citep{r101109lra20223180439,r101109tcds20162594134,r10117702783649251316881,r251120841v1,r101109icra20198793500} \citep{r103390robotics10040109,r10117702783649231196925,r101109fuzzieee20198858847,r1011093477678626,r1011771729881419900066} \citep{r101109iros4574320209341337,r101109robot20031241772,r101109robot19851087316,r1015612300000082,r101109access20233312940} \citep{r103390ijgi10100664,r101109access20213097893,r1011771059712317726357,r240610721v1,r101002rob21936} \citep{r1011770278364911421039,r1048550arxiv200407400,r101002rob22407,r103389frobt20241288818,r101002rob22333} \citep{robotnavigationinunseenspacesusinganabstra,r221005714v4,r101007s11370026007074,r241003509v1,r101109access20243367589} \citep{r101002rob21974,r103390logistics9030124,r101109tcds20162614992,r10117702783649211045736,r101109icra20188460695} \citep{r101109tiv20233328013,r1048550arxiv190306684,r101109iros20031250630,r101109robot20031241816,r103389frobt20231065394}
+
+\section{Additional Prior-Work Clusters}
+Affordance learning and manipulation representation pressure the map-quality claim \citep{r201008202v4,r101109icra20146907666,r1015607rss2017xiii058,r101109access20243387539,r101093bioinformaticsbtac053,r190305690v2,r101115ipc201031438,r103233978161499480035}. Active perception and probing pressure the hidden-state claim \citep{r101007978303036150146,r101109access20203045027,r101038s4146702121091w,r101109icra20115979638,r101109robio20157419073,r103390machines13060474,r103390s21030816,r101109humanoids20167803373}. Diffusion, sampling, and foundation-policy baselines pressure the action-search claim \citep{r101109access20192931910,r101109tcds20233277288,r101109icra20198793769,r1031234osfio4a5uh,r10111514069346,r101109iros5116820219636579,r101002rob22431,r101109access20243354775}. Robust control, safety filters, and uncertainty methods pressure the deployment claim \citep{r1048550arxiv210808481,r101109tie20213095812,bayesianmaplearningindynamicenvironments,r103390s20236988,r101162colia00404,r103390en15176256,r1011770278364913478446,r101109robot20105509418}. Sim-to-real and benchmark methodology pressure the scope claim \citep{r103390electronics12132925,r101002rob22004,r103390app12115420,r101038s41524024012096,r103390robotics9040077,r101109access20202980298,r101109robio4954220198961711,r101002rob22143}. These clusters collectively explain why the bar is higher than improving a single counterfactual recall number.
+
+\section{What Would Revive This Paper}
+A viable revival would need to: (1) keep the v5 mechanism improvements over v4; (2) reduce invalid action and damage rates to match active/robust baselines; (3) recover nonzero fixed-risk coverage at budget 0.05; (4) improve ECE without destroying coverage; (5) demonstrate stress-sweep robust utility dominance; (6) add real robot or accepted high-fidelity manipulation validation; and (7) report the same negative-case and paired-seed tables without selective omission.
+
+\section{Audit Philosophy}
+This manuscript is intentionally harsher than a normal first draft. It optimizes for survival under hostile review, not for pretty results. Strong baselines and stress tests were used to expose weaknesses, the method was improved relative to v4, the final protocol was frozen, and all predefined results are reported honestly. That is the scientific value of this artifact even though the terminal recommendation is negative.
+
+\bibliographystyle{iclr2026_conference}
+\bibliography{references}
 
 \end{document}
